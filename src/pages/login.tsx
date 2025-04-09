@@ -1,18 +1,26 @@
 import React from "react";
 import { Formik, Field, Form } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import bg1 from "../images/project-management.png";
 import bg2 from "../images/bg_img.png";
-import FacebookLogin from "@greatsumini/react-facebook-login";
+import FacebookLogin, {
+  FailResponse,
+  SuccessResponse,
+} from "@greatsumini/react-facebook-login";
 import GitHubLogin from "react-github-login";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebook, faGithub } from "@fortawesome/free-brands-svg-icons";
-import "../index.css";
 import { axiosInstance } from "../utils/axios-config";
+import { LOCALSTORAGE, ROUTE } from "../utils/constants";
+import { signInAsync } from "../store/slices/auth/auth.slice";
+import { useAppDispatch } from "../store/hooks";
+
+const GITHUB_APP_ID = process.env.REACT_APP_GITHUB_APP_ID!;
+const GITHUB_CALLBACK_URL = process.env.REACT_APP_GITHUB_CALLBACK_URL!;
 
 export enum LoginType {
   FACEBOOK = "facebook",
@@ -21,9 +29,16 @@ export enum LoginType {
   GITHUB = "github",
 }
 
-interface LoginFormValues {
+export interface LoginFormValues {
   email: string;
   password: string;
+}
+
+export interface GitHubFailResponse {
+  error: string;
+  error_description?: string;
+  error_uri?: string;
+  status?: number;
 }
 
 const LoginSchema: Yup.ObjectSchema<LoginFormValues> = Yup.object().shape({
@@ -33,42 +48,40 @@ const LoginSchema: Yup.ObjectSchema<LoginFormValues> = Yup.object().shape({
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const handleLogin = async (
     values: LoginFormValues,
-    { setSubmitting }: any
+    { setSubmitting }: { setSubmitting: (value: boolean) => void }
   ) => {
     try {
-      const response = await axios.post(
-        "http://localhost:3008/api/v1/users/login",
-        values
-      );
+      const response = await dispatch(signInAsync(values));
 
-      const token = response.data.token;
-      const refreshToken = response.data.refreshToken;
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("refreshToken", refreshToken);
+      if (response.payload.success) {
+        const token = response.payload.token;
+        const refreshToken = response.payload.refreshToken;
 
-      toast.success("Login Successful!", {
-        position: "top-right",
-        autoClose: 1000,
-      });
+        localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
+        localStorage.setItem(LOCALSTORAGE.REFRESHTOKEN, refreshToken);
 
-      setTimeout(() => navigate("/"), 1000);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message, {
-        position: "top-right",
-        autoClose: 3000,
-      });
+        setTimeout(() => navigate(ROUTE.DASHBOARD), 1000);
+      }
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Something went wrong", {
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  const onSucessFacebook = async (res: any) => {
+  const onSucessFacebook = async (res: SuccessResponse) => {
     if (res && res.accessToken) {
       try {
-        const response: any = await axiosInstance.post(
+        const response: AxiosResponse = await axiosInstance.post(
           "/users/login/facebook",
           {
             accessToken: res.accessToken,
@@ -76,11 +89,11 @@ const Login: React.FC = () => {
           }
         );
 
-        if (response.status === 200 || response.status === 201) {
+        if (response.data.success) {
           const token = response.data.token;
           if (token) {
-            localStorage.setItem("authToken", token);
-            navigate("/");
+            localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
+            navigate(ROUTE.DASHBOARD);
           }
         }
       } catch (error) {
@@ -92,25 +105,25 @@ const Login: React.FC = () => {
     }
   };
 
-  const onFailureFacebook = async (res: any) => {
-    toast.error("Facebook Login Failed!", {
+  const onFailureFacebook = async (res: FailResponse) => {
+    toast.error(res.status, {
       position: "top-right",
       autoClose: 3000,
     });
   };
 
-  const onSuccessGithub = async (res: any) => {
+  const onSuccessGithub = async (res: { code: string }) => {
     try {
       const response = await axiosInstance.post("/users/login/github", {
         code: res.code,
         LoginType: LoginType.GITHUB,
       });
 
-      if (response.status === 201 || 200) {
+      if (response.data.success) {
         const token = response.data.token;
         if (token) {
-          localStorage.setItem("authToken", token);
-          navigate("/");
+          localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
+          navigate(ROUTE.DASHBOARD);
         }
       }
     } catch (error) {
@@ -120,19 +133,26 @@ const Login: React.FC = () => {
       });
     }
   };
-  const onFailureGithub = (response: any) => {
-    toast.error("GitHub Login Failed!", {
+  const onFailureGithub = (response: GitHubFailResponse) => {
+    toast.error(response.status, {
       position: "top-right",
       autoClose: 3000,
     });
   };
 
   return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
+    <React.Fragment>
       <div className="min-h-screen bg-gray-50 pt-24">
-        <img src={bg1} alt="" className="absolute w-80 bottom-0 left-0" />
-        <img src={bg2} alt="" className="absolute w-96 bottom-0 right-0" />
+        <img
+          src={bg1}
+          alt="Background"
+          className="absolute w-80 bottom-0 left-0"
+        />
+        <img
+          src={bg2}
+          alt="Background"
+          className="absolute w-96 bottom-0 right-0"
+        />
         <div className="flex flex-col items-center w-72 justify-self-center self-center bg-white shadow-lg p-6">
           <span className="mb-5 font-medium text-lg">Log in to continue</span>
           <span className="flex self-start gap-2 mb-4">
@@ -209,11 +229,8 @@ const Login: React.FC = () => {
                     className="absolute top-[7px] left-8 size-5 text-white"
                   />
                   <GitHubLogin
-                    clientId={process.env.REACT_APP_GITHUB_APP_ID!}
-                    redirectUri={
-                      process.env.REACT_APP_GITHUB_CALLBACK_URL! ||
-                      "http://localhost:3000/auth/github/callback"
-                    }
+                    clientId={GITHUB_APP_ID}
+                    redirectUri={GITHUB_CALLBACK_URL}
                     onSuccess={onSuccessGithub}
                     onFailure={onFailureGithub}
                     buttonText="Login with Github"
@@ -225,7 +242,7 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
 };
 

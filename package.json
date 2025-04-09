@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "description": "A modern and intuitive task management system that allows users to efficiently organize tasks across multiple panels based on their current status (e.g., To Do, In Progress, Completed). Users can seamlessly drag and drop tasks between panels to update their workflow in real-time.",
   "license": "ISC",
   "author": "",
   "type": "commonjs",

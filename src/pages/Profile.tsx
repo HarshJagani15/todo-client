@@ -1,6 +1,6 @@
 import { faUser, faEnvelope } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { getImagePath } from "../utils/get-Image";
@@ -8,33 +8,38 @@ import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   editProfileName,
   editProfilePicture,
-} from "../store/slices/profile-slice";
+} from "../store/slices/profile/profile-slice";
+
+const ProfileImage = Yup.object().shape({
+  image: Yup.mixed()
+    .required("Image is required")
+    .test(
+      "fileSize",
+      "File size is too large",
+      (value: File | undefined) => value && value?.size <= 2000000
+    ) // 2MB max
+    .test(
+      "fileType",
+      "Unsupported file format",
+      (value: File | undefined) =>
+        value && ["image/jpeg", "image/png"].includes(value?.type)
+    ),
+});
 
 const Profile = () => {
-  const ProfileImage = Yup.object().shape({
-    image: Yup.mixed()
-      .required("Image is required")
-      .test(
-        "fileSize",
-        "File size is too large",
-        (value: any) => value && value?.size <= 5000000
-      ) // 5MB max
-      .test(
-        "fileType",
-        "Unsupported file format",
-        (value: any) =>
-          value && ["image/jpeg", "image/png"].includes(value?.type)
-      ),
-  });
-  // const [profileUser, setProfileUser] = useState<any>();
-  const [featureImage, setFeatureImage] = useState(true);
-  const [imageUrl, setImageUrl] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [isUserNameEditing, setIsUserNameEditing] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [isUserNameEmpty, setIsUserNameEmpty] = useState("");
   const { profile } = useAppSelector((state) => state.profile);
   const dispatch = useAppDispatch();
+
+  const [featureImage, setFeatureImage] = useState<boolean>(true);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [openDialog, setOpenDialog] = useState<boolean>(false);
+  const [isUserNameEditing, setIsUserNameEditing] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>("");
+  const [isUserNameEmpty, setIsUserNameEmpty] = useState<string>("");
+
+  useEffect(() => {
+    setUserName(profile?.name);
+  }, [profile?.name]);
 
   const imagePath = useMemo(
     () => getImagePath(profile?.profileImage),
@@ -42,12 +47,19 @@ const Profile = () => {
   );
 
   const handleEditUserName = async () => {
-    dispatch(editProfileName(userName));
+    dispatch(editProfileName({ name: userName }));
     setIsUserNameEditing(false);
-    setIsUserNameEmpty(null);
+    setIsUserNameEmpty("");
   };
 
-  const handleFileChange = (e: any, setFieldValue: any) => {
+  const handleFileChange = (
+    e: ChangeEvent<HTMLInputElement>,
+    setFieldValue: (
+      field: string,
+      value: File,
+      shouldValidate?: boolean
+    ) => void
+  ) => {
     const file = e.target.files[0];
     if (file) {
       setFeatureImage(false);
@@ -59,7 +71,7 @@ const Profile = () => {
     }
   };
 
-  const addProfilePicture = async (values: { image: any }) => {
+  const addProfilePicture = async (values: { image: File }) => {
     const formData = new FormData();
     formData.append("image", values.image);
     dispatch(editProfilePicture(formData));
@@ -67,20 +79,16 @@ const Profile = () => {
     setOpenDialog(false);
   };
 
-  useEffect(() => {
-    setUserName(profile?.name);
-  }, [profile?.name]);
   return (
     <div className="flex flex-col w-[800px] justify-self-center">
       <div className="bg-gray-200 h-32"></div>
       <div className="flex justify-between">
         <div className="mt-[-60px] ml-6 flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            {/* {profileUser?.profileImage ? ( */}
             <img
               onClick={() => setOpenDialog(true)}
               src={imagePath}
-              alt=""
+              alt="profileImg"
               className="rounded-full h-24 w-24 bg-slate-400 border-[2px] border-white flex justify-center items-center"
             />
 
@@ -109,7 +117,7 @@ const Profile = () => {
                               >
                                 <img
                                   src={imagePath}
-                                  alt=""
+                                  alt="Profile"
                                   className="h-24 w-24 object-cover rounded-full"
                                 />
                               </label>
@@ -117,13 +125,13 @@ const Profile = () => {
                               <img
                                 className="h-24 w-24 object-cover rounded-full"
                                 src={imageUrl}
-                                alt=""
+                                alt="img"
                               />
                             )}
                           </div>
                           {errors.image && touched.image && (
                             <div className="text-black text-base text-wrap">
-                              {errors.image as string}
+                              {typeof errors.image === "string" && errors.image}
                             </div>
                           )}
                           <input
@@ -133,7 +141,7 @@ const Profile = () => {
                             onChange={(e) => {
                               handleFileChange(e, setFieldValue);
                             }}
-                            style={{ display: "none" }}
+                            className="file-input-display"
                           />
                           <label
                             htmlFor="image"
@@ -191,7 +199,7 @@ const Profile = () => {
                   )}
                 </div>
                 <span className="pl-7">
-                  {isUserNameEmpty !== "" ? isUserNameEmpty : null}
+                  {isUserNameEmpty.length ? isUserNameEmpty : null}
                 </span>
               </div>
             </div>
@@ -206,7 +214,7 @@ const Profile = () => {
               <button
                 type="button"
                 onClick={() => {
-                  if (userName === "") {
+                  if (!userName.length) {
                     setIsUserNameEmpty("Required!");
                   } else {
                     handleEditUserName();

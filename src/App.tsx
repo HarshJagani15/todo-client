@@ -1,9 +1,15 @@
-import "./App.css";
 import { RouterProvider } from "react-router-dom";
 import router from "./Authentication/Router";
+import { ToastContainer } from "react-toastify";
+import React from "react";
 
-function App() {
-  return <RouterProvider router={router} />;
-}
+const App = () => {
+  return (
+    <React.Fragment>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <RouterProvider router={router} />
+    </React.Fragment>
+  );
+};
 
 export default App;

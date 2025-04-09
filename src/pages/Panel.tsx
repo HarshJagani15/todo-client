@@ -5,72 +5,66 @@ import {
   addTodo,
   deletePanel,
   editPanel,
-  Panel,
-} from "../store/slices/panel.slice";
+  IPanel,
+  ITodos,
+} from "../store/slices/panel/panel.slice";
 import { Field, Formik, Form, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useAppDispatch } from "../store/hooks";
 
-interface ITodoSchema {
-  heading: string;
+interface PanelProps {
+  searchTodoValue: string;
+  setSearchTodoValue: (value: string) => void;
+  isTodoAdding: boolean;
+  setIsTodoAdding: (value: boolean) => void;
+  setIsPanelAdding: (value: boolean) => void;
+  index: number;
+  panel: IPanel;
+  setIsOpen: (value: boolean) => void;
+  setDialogBoxTodo: (value: ITodos) => void;
+  moveTodo: (
+    todoId: string,
+    sourcePanelId: string,
+    targetPanelId: string
+  ) => void;
 }
 
-const TodoSchema: Yup.ObjectSchema<ITodoSchema> = Yup.object().shape({
-  heading: Yup.string().required("Required"),
+const TodoSchema: Yup.ObjectSchema<{ heading: string }> = Yup.object().shape({
+  heading: Yup.string().required("This field is required!"),
 });
+
 const PanelNameSchema: Yup.ObjectSchema<{ panelname: string }> =
   Yup.object().shape({
     panelname: Yup.string().required("Required"),
   });
-
-interface PanelProps {
-  searchTodoValue: string;
-  setSearchTodoValue: any;
-  isTodoAdding: boolean;
-  setIsTodoAdding: any;
-  setIsPanelAdding: any;
-  index: number;
-  panel: Panel;
-  setIsOpen: Function;
-  isOpen: boolean;
-  setDialogBoxTodo: any;
-  moveTodo: (
-    todoId: number,
-    sourcePanelId: number,
-    targetPanelId: number
-  ) => void;
-}
 
 export const PanelPage: React.FC<PanelProps> = ({
   index,
   panel,
   moveTodo,
   setIsOpen,
-  isOpen,
   setDialogBoxTodo,
   isTodoAdding,
   setIsTodoAdding,
   setIsPanelAdding,
-  searchTodoValue,
-  setSearchTodoValue,
 }) => {
-
   const dispatch = useAppDispatch();
-  const [isPanelEditing, setIsPanelEditing] = useState(false);
 
-  const [isPanelDeleting, setIsPanelDeleting] = useState(false);
+  const [isPanelEditing, setIsPanelEditing] = useState<boolean>(false);
+  const [isPanelDeleting, setIsPanelDeleting] = useState<boolean>(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  const handlePanelDelete = (panelID: number) => {
-    dispatch(deletePanel(panelID));
+  const handlePanelDelete = (panelID: string) => {
+    dispatch(deletePanel({ _id: panelID }));
   };
 
   const handlePanelEdit = (values: { panelname: string }) => {
     dispatch(
       editPanel({
-        panel_name: values.panelname,
-        panel_id: panel._id,
+        _id: panel._id,
+        name: values.panelname,
       })
     );
     setIsPanelEditing(false);
@@ -80,16 +74,14 @@ export const PanelPage: React.FC<PanelProps> = ({
     values: { heading: string },
     formikHelpers: FormikHelpers<{ heading: string }>
   ) => {
-    dispatch(addTodo({ heading: values.heading, panel_id: panel._id }));
+    dispatch(addTodo({ heading: values.heading, _id: panel._id }));
     setIsTodoAdding(false);
     formikHelpers.setSubmitting(false);
   };
 
-  const ref = useRef<HTMLDivElement>(null);
-
   const [{ isOver }, drop] = useDrop(() => ({
     accept: "TODO",
-    drop: (item: { todoId: number; sourcePanelId: number }) => {
+    drop: (item: { todoId: string; sourcePanelId: string }) => {
       moveTodo(item.todoId, item.sourcePanelId, panel._id);
     },
     collect: (monitor) => ({
@@ -99,7 +91,7 @@ export const PanelPage: React.FC<PanelProps> = ({
 
   drop(ref);
   return (
-    <div>
+    <React.Fragment>
       {index === 0 ? (
         <div>
           <div className="flex justify-between items-center p-3">
@@ -134,7 +126,7 @@ export const PanelPage: React.FC<PanelProps> = ({
                           className="focus:outline-none bg-white border-[1px] border-black  w-full"
                         />
                         {errors.heading && touched.heading && (
-                          <div className="text-black text-base">
+                          <div className="text-red-600 text-base">
                             {errors.heading}
                           </div>
                         )}
@@ -201,9 +193,8 @@ export const PanelPage: React.FC<PanelProps> = ({
           ) : (
             <div className="flex justify-between bg-white p-2">
               <div className="">
-                <span className=" px-2 text-[15px] font-medium ">
-                  {panel.name.charAt(0).toUpperCase() +
-                    panel.name.slice(1).toLowerCase()}
+                <span className=" px-2 text-[15px] capitalize font-medium ">
+                  {panel.name}
                 </span>
               </div>
               <div className="flex gap-2 items-center">
@@ -227,7 +218,7 @@ export const PanelPage: React.FC<PanelProps> = ({
                   >
                     <div className="bg-white p-6 h-fit absolute top-16 flex flex-col gap-2">
                       <span className="text-lg font-medium">
-                        Are sure want to delete all the todos of panel
+                        Are sure want to delete all the todos of panel?
                       </span>
                       <div className="flex gap-2">
                         <button
@@ -253,18 +244,17 @@ export const PanelPage: React.FC<PanelProps> = ({
           )}
         </div>
         <div className="flex flex-col gap-[6px] max-h-60 overflow-y-scroll">
-          {panel.todos.map((todo) => (
+          {panel?.todos?.map((todo) => (
             <Todo
               key={todo._id}
               todo={todo}
               sourcePanelId={panel._id}
               setIsOpen={setIsOpen}
-              isOpen={isOpen}
               setDialogBoxTodo={setDialogBoxTodo}
             />
           ))}
         </div>
       </div>
-    </div>
+    </React.Fragment>
   );
 };

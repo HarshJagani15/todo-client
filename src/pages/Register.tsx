@@ -2,51 +2,68 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Formik, Field, Form, FormikErrors, FormikValues } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import bg1 from "../images/project-management.png";
 import bg2 from "../images/bg_img.png";
-import FacebookLogin from "@greatsumini/react-facebook-login";
+import FacebookLogin, {
+  FailResponse,
+  SuccessResponse,
+} from "@greatsumini/react-facebook-login";
 import GitHubLogin from "react-github-login";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebook, faGithub } from "@fortawesome/free-brands-svg-icons";
 import { axiosInstance } from "../utils/axios-config";
-import { LoginType } from "./login";
+import { GitHubFailResponse, LoginType } from "./login";
+import { LOCALSTORAGE, ROUTE } from "../utils/constants";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { useAppDispatch } from "../store/hooks";
+import { signUpAsync } from "../store/slices/auth/auth.slice";
 
-function Register() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+const GITHUB_APP_ID = process.env.REACT_APP_GITHUB_APP_ID!;
+const GITHUB_CALLBACK_URL = process.env.REACT_APP_GITHUB_CALLBACK_URL!;
+
+export interface IRegisterFormValues {
+  userName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface IRegisterFormData
+  extends Omit<IRegisterFormValues, "confirmPassword"> {
+  loginType: string;
+}
+
+const SignupSchema = Yup.object().shape({
+  userName: Yup.string()
+    .min(2, "Too Short!")
+    .max(50, "Too Long!")
+    .required("Required"),
+  email: Yup.string().email("Invalid email").required("Required"),
+  password: Yup.string()
+    .min(6, "Too Short!")
+    .max(15, "Too Long!")
+    .matches(/^[A-Z]/, "Password must start with an uppercase letter")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    .matches(
+      /[^A-Za-z0-9]/,
+      "Password must contain at least one special character"
+    )
+    .required("Required"),
+  confirmPassword: Yup.string()
+    .min(6, "Too Short!")
+    .max(15, "Too Long!")
+    .required("Required")
+    .oneOf([Yup.ref("password")], "Passwords must match"),
+});
+
+const Register = () => {
   const navigate = useNavigate();
-
-  const SignupSchema = Yup.object().shape({
-    userName: Yup.string()
-      .min(2, "Too Short!")
-      .max(50, "Too Long!")
-      .required("Required"),
-    email: Yup.string()
-      .email("Invalid email")
-      .matches(
-        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com)$/,
-        "Email must end with .com"
-      )
-      .required("Required"),
-    password: Yup.string()
-      .min(6, "Too Short!")
-      .max(15, "Too Long!")
-      .matches(/^[A-Z]/, "Password must start with an uppercase letter")
-      .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-      .matches(
-        /[^A-Za-z0-9]/,
-        "Password must contain at least one special character"
-      )
-      .required("Required"),
-    confirmPassword: Yup.string()
-      .min(6, "Too Short!")
-      .max(15, "Too Long!")
-      .required("Required")
-      .oneOf([Yup.ref("password")], "Passwords must match"),
-  });
+  const dispatch = useAppDispatch();
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
 
   const isFieldDisabled = (
     errors: FormikErrors<FormikValues>,
@@ -62,48 +79,24 @@ function Register() {
     return false;
   };
 
-  async function handleSubmit(values: {
-    userName: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-  }) {
-    try {
-      const response = await axios.post(
-        "http://localhost:3008/api/v1/users/register",
-        {
-          userName: values.userName,
-          email: values.email,
-          password: values.password,
-          loginType: LoginType.EMAIL,
-        }
-      );
+  const handleSubmit = async (values: IRegisterFormValues) => {
+    const payload: IRegisterFormData = {
+      userName: values.userName,
+      email: values.email,
+      password: values.password,
+      loginType: LoginType.EMAIL,
+    };
 
-      if (response.status === 201 || response.status === 200) {
-        toast.success("Registration Successful!", {
-          position: "top-right",
-          autoClose: 2000,
-        });
-        setTimeout(() => {
-          navigate("/Login");
-        }, 1000);
-      }
-    } catch (error: any) {
-      if (error.response.status === 409) {
-        return toast.error("User Already exists !", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      }
-      toast.error("Registration Failed!", {
-        position: "top-right",
-        autoClose: 3000,
-      });
+    const response = await dispatch(signUpAsync(payload));
+
+    if (response.payload.success) {
+      setTimeout(() => {
+        navigate(ROUTE.LOGIN);
+      }, 1000);
     }
-  }
+  };
 
-  const onSucessFacebook = async (res: any) => {
-    console.log(res.accessToken);
+  const onSucessFacebook = async (res: SuccessResponse) => {
     if (res && res.accessToken) {
       try {
         const response = await axiosInstance.post("/users/register/facebook", {
@@ -111,11 +104,11 @@ function Register() {
           LoginType: LoginType.FACEBOOK,
         });
 
-        if (response.status === 200 || response.status === 201) {
+        if (response.data.success) {
           const token = response.data.token;
           if (token) {
-            localStorage.setItem("authToken", response.data.token);
-            navigate("/");
+            localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, response.data.token);
+            navigate(ROUTE.DASHBOARD);
           }
         }
       } catch (error) {
@@ -128,25 +121,25 @@ function Register() {
     }
   };
 
-  const onFailureFacebook = async (res: any) => {
-    toast.error("Facebook Login Failed!", {
+  const onFailureFacebook = async (res: FailResponse) => {
+    toast.error(res.status, {
       position: "top-right",
       autoClose: 3000,
     });
   };
 
-  const onSuccessGithub = async (res: any) => {
+  const onSuccessGithub = async (res: { code: string }) => {
     try {
       const response = await axiosInstance.post("/users/register/github/", {
         code: res.code,
         LoginType: LoginType.GITHUB,
       });
 
-      if (response.status === 200 || response.status === 201) {
+      if (response.data.success) {
         const token = response.data.token;
         if (token) {
-          localStorage.setItem("authToken", response.data.token);
-          navigate("/");
+          localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, response.data.token);
+          navigate(ROUTE.DASHBOARD);
         }
       }
     } catch (error) {
@@ -156,19 +149,26 @@ function Register() {
       });
     }
   };
-  const onFailureGithub = (response: any) => {
-    toast.error("GitHub Login Failed!", {
+  const onFailureGithub = (res: GitHubFailResponse) => {
+    toast.error(res.status, {
       position: "top-right",
       autoClose: 3000,
     });
   };
 
   return (
-    <>
-      <ToastContainer position="top-right" autoClose={3000} />
+    <React.Fragment>
       <div className="bg-gray-50 pt-4">
-        <img src={bg1} alt="" className="absolute w-72 bottom-0 left-0" />
-        <img src={bg2} alt="" className="absolute w-96 bottom-0 right-0" />
+        <img
+          src={bg1}
+          alt="Backround img"
+          className="absolute w-72 bottom-0 left-0"
+        />
+        <img
+          src={bg2}
+          alt="BAckground img"
+          className="absolute w-96 bottom-0 right-0"
+        />
         <div className="flex flex-col gap-6  justify-self-center w-fit rounded-[10px] bg-white p-10 ">
           <div className="flex flex-col gap-2">
             <h1 className="text-[28px] font-[500] text-black ">Register</h1>
@@ -248,7 +248,11 @@ function Register() {
                                 cursor: "pointer",
                               }}
                             >
-                              {showPassword ? "🙈" : "👁️"}
+                              {showPassword ? (
+                                <FontAwesomeIcon icon={faEyeSlash} />
+                              ) : (
+                                <FontAwesomeIcon icon={faEye} />
+                              )}
                             </button>
                           )}
                           {!isDisabled && name === "confirmPassword" && (
@@ -267,7 +271,11 @@ function Register() {
                                 cursor: "pointer",
                               }}
                             >
-                              {showConfirmPassword ? "🙈" : "👁️"}
+                              {showConfirmPassword ? (
+                                <FontAwesomeIcon icon={faEyeSlash} />
+                              ) : (
+                                <FontAwesomeIcon icon={faEye} />
+                              )}
                             </button>
                           )}
                         </div>
@@ -315,11 +323,8 @@ function Register() {
                 />
                 <GitHubLogin
                   buttonText="Sign up with Github"
-                  clientId={process.env.REACT_APP_GITHUB_APP_ID!}
-                  redirectUri={
-                    process.env.REACT_APP_GITHUB_CALLBACK_URL! ||
-                    "http://localhost:3000/auth/github/callback"
-                  }
+                  clientId={GITHUB_APP_ID}
+                  redirectUri={GITHUB_CALLBACK_URL}
                   onSuccess={onSuccessGithub}
                   onFailure={onFailureGithub}
                   className="pl-9 w-60 bg-gray-900 text-white text-center px-4 py-[5px] rounded-sm font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition duration-300"
@@ -329,8 +334,8 @@ function Register() {
           </div>
         </div>
       </div>
-    </>
+    </React.Fragment>
   );
-}
+};
 
 export default Register;

@@ -1,21 +1,19 @@
 import React, { useRef } from "react";
 import { useDrag } from "react-dnd";
-import { Todos } from "../store/slices/panel.slice";
-import men from "../images/men.png";
+import { ITodos } from "../store/slices/panel/panel.slice";
+import { defaultImage, profileDefultImage } from "../utils/get-Image";
 
 interface TodoProps {
-  todo: Todos;
-  sourcePanelId: number;
-  setIsOpen: Function;
-  isOpen: boolean;
-  setDialogBoxTodo: any;
+  todo: ITodos;
+  sourcePanelId: string;
+  setIsOpen: (value: boolean) => void;
+  setDialogBoxTodo: (value: ITodos) => void;
 }
 
 export const Todo: React.FC<TodoProps> = ({
   todo,
   sourcePanelId,
   setIsOpen,
-  isOpen,
   setDialogBoxTodo,
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -44,10 +42,18 @@ export const Todo: React.FC<TodoProps> = ({
     >
       <h1 className="text-lg">{todo.heading}</h1>
       <div className="flex justify-between items-end">
-        <img src={men} alt="" className="h-6 w-6" />
+        <img
+          src={defaultImage(profileDefultImage)}
+          alt="img"
+          className="h-6 w-6"
+        />
         <div className="flex items-center gap-2">
           <h3 className="text-sm">{todo.description}</h3>
-          <img src={men} alt="" className="h-7 w-7" />
+          <img
+            src={defaultImage(profileDefultImage)}
+            alt="img"
+            className="h-7 w-7"
+          />
         </div>
       </div>
     </div>

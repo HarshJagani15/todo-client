@@ -6,24 +6,23 @@ import {
   addComment,
   addPanel,
   changeDescription,
-  changeHeading,
+  changeTodoHeading,
   deleteComment,
   dragDropTodos,
   editComment,
   fetchPanels,
   IParams,
-  Todos,
-} from "../store/slices/panel.slice";
+  ITodos,
+} from "../store/slices/panel/panel.slice";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsis, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import men from "../images/men.png";
 import add_user from "../images/add_user.png";
 import star from "../images/star.png";
 import rainbow from "../images/rainbow.jpeg";
 import * as Yup from "yup";
-import Dialog from "../components/Dialog";
-import React, { useEffect, useMemo, useState } from "react";
+import Dialog from "../components/common/Dialog";
+import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   faShareNodes,
   faXmark,
@@ -35,6 +34,8 @@ import { faThumbsUp } from "@fortawesome/free-regular-svg-icons";
 import { Formik, Form, Field, FormikHelpers } from "formik";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "react-router-dom";
+import Select from "../components/common/Select";
+import { defaultImage, profileDefultImage } from "../utils/get-Image";
 
 const HeadingSchema = Yup.object().shape({
   heading: Yup.string().required("Required"),
@@ -65,21 +66,52 @@ const formateDate = (date: string) => {
 };
 
 const Panels = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isDetailsVisible, setIsDetailVisible] = useState(false);
-  const [dialogBoxTodo, setDialogBoxTodo] = useState<null | Todos>(null);
-  const [dialogBoxHeading, setDialogBoxHeading] = useState<
-    string | undefined
-  >();
-  const [dialogBoxDescription, setDialogBoxDescription] = useState<
-    string | undefined
-  >();
+  const dispatch = useAppDispatch();
 
-  const [dropdown, setdropdown] = useState<string | undefined>();
-  const [searchValue, setSearchValue] = useState("");
-  const [searchTodoValue, setSearchTodoValue] = useState("");
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isDetailsVisible, setIsDetailVisible] = useState<boolean>(false);
+  const [dialogBoxTodo, setDialogBoxTodo] = useState<null | ITodos>(null);
+  const [dialogBoxHeading, setDialogBoxHeading] = useState<string>("");
+  const [dialogBoxDescription, setDialogBoxDescription] = useState<string>("");
+  const [dropdown, setdropdown] = useState<string>("");
+  const [searchValue, setSearchValue] = useState<string>("");
+  const [searchTodoValue, setSearchTodoValue] = useState<string>("");
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isTodoAdding, setIsTodoAdding] = useState(false);
+  const [isTodoAdding, setIsTodoAdding] = useState<boolean>(false);
+  const [commentEditIndex, setCommentEditIndex] = useState<string | null>(null);
+  const [commentEmptyError, setCommentEmptyError] = useState<string>("");
+  const [commentValue, setComment] = useState<string>("");
+  const { panels } = useAppSelector((state) => state.panel);
+  const [isPanelAdding, setIsPanelAdding] = useState<boolean>(false);
+  const men = defaultImage(profileDefultImage);
+  const images = [
+    { img: men, zindex: 4 },
+    { img: men, zindex: 3 },
+    { img: men, zindex: 2 },
+    { img: men, zindex: 1 },
+  ];
+
+  const debouncedDispatch = useMemo(() => {
+    return debounce((params: IParams) => {
+      dispatch(fetchPanels(params));
+    }, 500);
+  }, [dispatch]);
+
+  useEffect(() => {
+    let params: IParams = {
+      search: "",
+    };
+    if (searchParams) {
+      params.search = searchParams.get("search");
+    }
+    setSearchValue(params.search);
+    debouncedDispatch(params);
+  }, [searchParams, debouncedDispatch]);
+
+  useEffect(() => {
+    setDialogBoxDescription(dialogBoxTodo?.description);
+    setDialogBoxHeading(dialogBoxTodo?.heading);
+  }, [isOpen, dialogBoxTodo?.description, dialogBoxTodo?.heading]);
 
   const handleSearchParams = (value: string) => {
     if (value) {
@@ -89,13 +121,11 @@ const Panels = () => {
     }
   };
 
-  const dispatch = useAppDispatch();
-
   const handleDescription = async () => {
     const result = await dispatch(
       changeDescription({
         description: dialogBoxDescription!,
-        todo_id: dialogBoxTodo?._id!,
+        _id: dialogBoxTodo?._id!,
       })
     ).unwrap();
 
@@ -110,11 +140,11 @@ const Panels = () => {
     }
   };
 
-  const handleHeading = async () => {
+  const handleTodoHeading = async () => {
     const result = await dispatch(
-      changeHeading({
+      changeTodoHeading({
         heading: dialogBoxHeading!,
-        todo_id: dialogBoxTodo?._id!,
+        _id: dialogBoxTodo?._id!,
       })
     ).unwrap();
 
@@ -136,7 +166,7 @@ const Panels = () => {
     const result = await dispatch(
       addComment({
         comment: values.comment!,
-        todo_id: dialogBoxTodo?._id!,
+        _id: dialogBoxTodo?._id!,
       })
     ).unwrap();
 
@@ -159,17 +189,12 @@ const Panels = () => {
     }
   };
 
-  const [commentEditIndex, setCommentEditIndex] = useState<number | null>(null);
-  const [commentEmptyError, setCommentEmptyError] = useState("");
-
-  const [commentValue, setComment] = useState("");
-
-  const handleEditComment = (commentId: number) => {
+  const handleEditComment = (commentId: string) => {
     dispatch(
       editComment({
         todo_id: dialogBoxTodo?._id!,
-        newComment: commentValue,
-        comment_id: commentId,
+        comment: commentValue,
+        _id: commentId,
       })
     );
 
@@ -190,11 +215,11 @@ const Panels = () => {
     });
   };
 
-  const handleDeleteComment = (commentId: number) => {
+  const handleDeleteComment = (commentId: string) => {
     dispatch(
       deleteComment({
         todo_id: dialogBoxTodo?._id!,
-        comment_id: commentId,
+        _id: commentId,
       })
     );
 
@@ -205,6 +230,20 @@ const Panels = () => {
         comments: prev.comments.filter((c, i) => c._id !== commentId),
       };
     });
+  };
+
+  const handleAddPanel = (values: { panelname: string }) => {
+    const name = values.panelname;
+    dispatch(addPanel({ name }));
+    setIsPanelAdding(false);
+  };
+
+  const moveTodo = (
+    todoId: string,
+    sourcePanelId: string,
+    targetPanelId: string
+  ) => {
+    dispatch(dragDropTodos({ todoId, sourcePanelId, targetPanelId }));
   };
 
   const Content = () => {
@@ -221,7 +260,7 @@ const Panels = () => {
                 heading: dialogBoxTodo?.heading!,
               }}
               validationSchema={HeadingSchema}
-              onSubmit={handleHeading}
+              onSubmit={handleTodoHeading}
             >
               {({ errors, touched }) => (
                 <Form className="flex gap-8">
@@ -278,7 +317,7 @@ const Panels = () => {
                       id="description"
                       placeholder="Add a description..."
                       value={dialogBoxDescription}
-                      onChange={(e: any) =>
+                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
                         setDialogBoxDescription(e.target.value)
                       }
                       className="focus:outline-none text-base py-1 w-[345px] bg-gray-100 resize-none"
@@ -297,24 +336,25 @@ const Panels = () => {
             </div>
             <div className="flex flex-col justify-between">
               <div className="flex flex-col gap-3">
-                <select
-                  name=""
-                  id=""
-                  className="focus:outline-none bg-[#eeeeee] py-[5px] px-3 text-center font-semibold text-base w-fit text"
-                >
-                  <option value="">To Do</option>
-                  <option value="">value 1</option>
-                </select>
-                <div className="ml-6">
+                <Select
+                  name={"dropdown"}
+                  defaultOption={"To Do"}
+                  options={["To Do", "value 1"]}
+                  className={
+                    "focus:outline-none bg-[#eeeeee] py-[5px] px-3 text-center font-semibold text-base w-fit text"
+                  }
+                />
+                <div className="ml-6 flex items-center gap-2">
                   <FontAwesomeIcon icon={faBoltLightning}></FontAwesomeIcon>
-                  <select
-                    name=""
-                    id=""
-                    className="focus:outline-none p-2 text-center font-medium w-fit"
-                  >
-                    <option value="">Actions</option>
-                    <option value="">value 1</option>
-                  </select>
+
+                  <Select
+                    name={"Actions"}
+                    defaultOption={"Actions"}
+                    options={["value 1", "value 2"]}
+                    className={
+                      "focus:outline-none text-center  font-medium w-fit"
+                    }
+                  />
                 </div>
                 <div className="flex flex-col gap-5 w-72  border-2 rounded-sm border-gray-300 border-collapse">
                   <div
@@ -340,20 +380,18 @@ const Panels = () => {
             <div className="flex flex-col gap-2">
               <h3 className="text-lg font-semibold ">Activity</h3>
               <div className="text-base flex gap-4 items-center justify-between">
-                <div>
+                <div className="flex items-center">
                   <label htmlFor="">Show:</label>
-                  <select
-                    name=""
-                    id=""
-                    className="focus:outline-none bg-[#eeeeee] p-1 text-center"
+
+                  <Select
+                    name={"dropdown"}
                     value={dropdown}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                      setdropdown(e.target.value)
+                    setValue={setdropdown}
+                    options={["history", "comments"]}
+                    className={
+                      "focus:outline-none text-center  font-medium w-fit"
                     }
-                  >
-                    <option value="history">History</option>
-                    <option value="comments">Comments</option>
-                  </select>
+                  />
                 </div>
                 <div className="flex gap-2 items-center">
                   <label htmlFor="">Newest first</label>
@@ -377,7 +415,11 @@ const Panels = () => {
                     return (
                       <li className="flex flex-col">
                         <div className="flex gap-2">
-                          <img src={men} alt="" className="size-8" />
+                          <img
+                            src={defaultImage(profileDefultImage)}
+                            alt="img"
+                            className="size-8"
+                          />
                           <div>
                             <div className="flex gap-2 text-[14px]">
                               <span className="font-medium">Emma</span>
@@ -447,7 +489,7 @@ const Panels = () => {
                   })}
                 </ul>
                 <div className="flex items-center gap-3">
-                  <img src={men} alt="" className="size-8" />
+                  <img src={men} alt="img" className="size-8" />
                   <Formik
                     initialValues={{
                       comment: "",
@@ -480,7 +522,6 @@ const Panels = () => {
             ) : (
               <div className="overflow-x-auto bg-white shadow-md rounded-lg max-h-40 relative">
                 <table className="w-full border-collapse ">
-                  {/* Table Header */}
                   <thead className="bg-gray-100 text-gray-600 text-sm uppercase font-medium sticky top-0">
                     <tr>
                       <th className="px-6 py-3 text-left">Time</th>
@@ -490,7 +531,6 @@ const Panels = () => {
                     </tr>
                   </thead>
 
-                  {/* Table Body */}
                   <tbody className="text-gray-700 text-sm overflow-y-scroll">
                     {dialogBoxTodo?.histories.map((history, index) => (
                       <tr
@@ -583,59 +623,13 @@ const Panels = () => {
     );
   };
 
-  const images = [
-    { img: men, zindex: 4 },
-    { img: men, zindex: 3 },
-    { img: men, zindex: 2 },
-    { img: men, zindex: 1 },
-  ];
-
-  const { panels } = useAppSelector((state) => state.panel);
-  const [isPanelAdding, setIsPanelAdding] = useState(false);
-
-  const handleAddPanel = (values: { panelname: string }) => {
-    dispatch(addPanel(values.panelname));
-    setIsPanelAdding(false);
-  };
-
-  const moveTodo = (
-    todoId: number,
-    sourcePanelId: number,
-    targetPanelId: number
-  ) => {
-    dispatch(dragDropTodos({ todoId, sourcePanelId, targetPanelId }));
-  };
-
-  const debouncedDispatch = useMemo(() => {
-    return debounce((params: IParams) => {
-      dispatch(fetchPanels(params));
-    }, 500);
-  }, [dispatch]);
-
-  useEffect(() => {
-    let params: IParams = {
-      search: "",
-    };
-
-    if (searchParams) {
-      params.search = searchParams.get("search");
-    }
-    setSearchValue(params.search);
-    debouncedDispatch(params);
-  }, [searchParams, debouncedDispatch]);
-
-  useEffect(() => {
-    setDialogBoxDescription(dialogBoxTodo?.description);
-    setDialogBoxHeading(dialogBoxTodo?.heading);
-  }, [isOpen, dialogBoxTodo?.description, dialogBoxTodo?.heading]);
-
   return (
     <div className="p-10 flex flex-col gap-10">
       <div className="flex items-end justify-between">
         <div className="flex items-center gap-1">
-          <img src={star} alt="" className="h-8" />
+          <img src={star} alt="img" className="h-8" />
           <h1 className="text-3xl font-medium">Design board</h1>
-          <img src={star} alt="" className="h-8" />
+          <img src={star} alt="img" className="h-8" />
         </div>
         <FontAwesomeIcon icon={faEllipsis} className="size-5" />
       </div>
@@ -658,60 +652,44 @@ const Panels = () => {
             />
           </div>
           <div className=" px-8 border-r-2 border-gray-300 h-8 hidden">
-            {images.map((img, index) => {
+            {images?.map((img, index) => {
               return (
                 <img
                   src={img.img}
-                  alt=""
+                  alt="img"
                   className="w-auto ml-[-5px]"
                   style={{ zIndex: img.zindex }}
                 />
               );
             })}
-            <img src={add_user} alt="" className="w-8 ml-[-5px] z-0" />
+            <img src={add_user} alt="svg" className="w-8 ml-[-5px] z-0" />
           </div>
           <div className="px-8 border-r-2 border-gray-300  gap-1 hidden">
-            <img src={rainbow} alt="" className="h-[22px]" />
-            <select
-              name=""
-              id=""
-              className="focus:outline-none bg-[#eeeeee] rounded-2xl pr-1 text-center h-min"
-            >
-              <option value="" disabled selected>
-                Experience
-              </option>
-              <option value="">value 2</option>
-              <option value="">value 3</option>
-            </select>
+            <img src={rainbow} alt="img" className="h-[22px]" />
+
+            <Select
+              name={"Experience"}
+              defaultOption={"Experience"}
+              options={["Option 1", "Option 2"]}
+            />
           </div>
           <div className="px-8">
-            <select
-              name=""
-              id=""
-              className="focus:outline-none bg-[#eeeeee] rounded-2xl pr-1 text-center h-min"
-            >
-              <option value="" disabled selected>
-                Label
-              </option>
-              <option value="">value 2</option>
-              <option value="">value 3</option>
-            </select>
+            <Select
+              name={"Label"}
+              defaultOption={"Label"}
+              options={["label 1", "label 2"]}
+            />
           </div>
         </div>
 
         <div className="flex gap-2 items-center">
           <label className="text-sm">GROUP BY</label>
-          <select
-            name=""
-            id=""
-            className="focus:outline-none bg-[#eeeeee] py-1 text-center"
-          >
-            <option value="" disabled selected>
-              None
-            </option>
-            <option value="">value 2</option>
-            <option value="">value 3</option>
-          </select>
+
+          <Select
+            name={"dropdown"}
+            defaultOption={"None"}
+            options={["value 1", "value 2"]}
+          />
         </div>
       </div>
       <div className="relative flex flex-col w-full">
@@ -776,7 +754,6 @@ const Panels = () => {
                     panel={panel}
                     moveTodo={moveTodo}
                     setIsOpen={setIsOpen}
-                    isOpen={isOpen}
                     setDialogBoxTodo={setDialogBoxTodo}
                     isTodoAdding={isTodoAdding}
                     setIsTodoAdding={setIsTodoAdding}

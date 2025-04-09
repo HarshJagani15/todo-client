@@ -1,25 +1,19 @@
-// Import necessary modules and constants
 import axios from "axios";
-import { ROUTING } from "./constants";
+import { LOCALSTORAGE, ROUTE, ROUTING } from "./constants";
 import { getUserSessionData, SessionData } from "./utils";
 
-// Create an axios instance with default configuration
 export const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL!, // Ensure the base URL is configured correctly
+  baseURL: process.env.REACT_APP_API_BASE_URL!,
 });
 
-// Define routes that do not require authentication
 const noAuthRoutes = [ROUTING.SIGNIN, ROUTING.SIGNUP];
 
-// Add a request interceptor to the axios instance
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Check if the request URL matches any of the no-auth routes
     const isNoAuthRoute = noAuthRoutes.some((route) =>
       config.url?.startsWith(route)
     );
 
-    // If the route requires authentication, add the Authorization header
     if (!isNoAuthRoute) {
       const sessionData: SessionData = getUserSessionData();
       const { accessToken } = sessionData;
@@ -28,16 +22,12 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    // Handle the Content-Type for FormData and other data
     if (config.data instanceof FormData) {
-      // If it's FormData, Axios will set the correct Content-Type automatically
-      delete config.headers["Content-Type"]; // Remove any manually set Content-Type
+      delete config.headers["Content-Type"];
     } else {
-      // If it's not FormData, ensure the Content-Type is application/json
       config.headers["Content-Type"] = "application/json";
     }
 
-    // Return the modified config
     return config;
   },
   (error) => {
@@ -45,24 +35,22 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-let isRefreshing = false; // Flag to track if the refresh token request is in progress
-let failedQueue = []; // Array to store requests that fail during token refresh
+let isRefreshing = false;
+let failedQueue = [];
 
-// Function to handle the queue once the token is refreshed
-const processQueue = (error: any, newAccessToken = null) => {
-  console.log("newAccessToken", newAccessToken);
+const processQueue = (error: unknown, newAccessToken = null) => {
   failedQueue.forEach((prom) => {
     if (newAccessToken) {
-      prom.resolve(newAccessToken); // Resolve the promise with the new token
+      prom.resolve(newAccessToken);
     } else {
-      prom.reject(error); // Reject the promise with the error
+      prom.reject(error);
     }
   });
-  failedQueue = []; // Clear the queue
+  failedQueue = [];
 };
 
 axiosInstance.interceptors.response.use(
-  (response) => response, // Return the response as is
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
@@ -83,10 +71,10 @@ axiosInstance.interceptors.response.use(
           const newRefreshToken = response.data.refreshToken;
 
           if (newAccessToken) {
-            localStorage.setItem("authToken", newAccessToken);
+            localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, newAccessToken);
           }
           if (newRefreshToken) {
-            localStorage.setItem("refreshToken", newRefreshToken);
+            localStorage.setItem(LOCALSTORAGE.REFRESHTOKEN, newRefreshToken);
           }
 
           axiosInstance.defaults.headers[
@@ -97,13 +85,13 @@ axiosInstance.interceptors.response.use(
           processQueue(null, newAccessToken);
 
           setTimeout(() => {
-            window.location.reload(); // Refresh the page
+            window.location.reload();
           }, 1000);
 
           return axiosInstance(originalRequest);
         } catch (refreshError) {
           console.error("Error refreshing token", refreshError);
-          window.location.href = "/login";
+          window.location.href = ROUTE.LOGIN;
           processQueue(refreshError, null);
           throw refreshError;
         } finally {
@@ -125,7 +113,6 @@ axiosInstance.interceptors.response.use(
           });
       }
     } else if (error.response?.status === 404) {
-      window.location.href = "/login";
     }
 
     return Promise.reject(error);
