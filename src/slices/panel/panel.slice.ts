@@ -11,90 +11,23 @@ import {
   updatePanelName,
   updateTodoDescription,
   updateTodoHeading,
-} from "../panel/panel.api";
+} from "./panel.api";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-export interface IParams {
-  search: string | null;
-}
-
-export interface IPanel {
-  _id?: string;
-  name: string;
-  todos?: ITodos[];
-}
-
-export interface IAddPanel extends IPanel {}
-
-export interface IEditPanel extends IPanel {
-  _id: string;
-}
-
-export interface IDeletePanel {
-  _id: string;
-}
-
-export interface ITodos {
-  _id: string;
-  heading?: string;
-  description?: string;
-  comments?: Comment[];
-  histories?: History[];
-}
-
-export interface IAddTodo extends ITodos {
-  heading: string;
-}
-
-export interface IChangeTodoHeading extends ITodos {
-  heading: string;
-}
-
-export interface IChangeTodoDescription extends ITodos {
-  description: string;
-}
-
-export interface IAddComment extends ITodos {
-  comment: string;
-}
-
-export interface IDragDropTodos {
-  todoId: string;
-  sourcePanelId: string;
-  targetPanelId: string;
-}
-
-export interface Comment {
-  _id: string;
-  date?: number;
-  comment?: string;
-}
-export interface IEditComment extends Comment {
-  todo_id: string;
-  comment: string;
-}
-
-export interface IDeleteComment extends Comment {
-  todo_id: string;
-}
-
-interface History {
-  timestamp: string;
-  field: string;
-  previous: {
-    heading: string;
-    description: string;
-  };
-  updated: {
-    heading: string;
-    description: string;
-  };
-}
-
-export interface InitialState {
-  panels: IPanel[];
-}
+import {
+  IAddComment,
+  IAddPanel,
+  IAddTodo,
+  IChangeTodoDescription,
+  IChangeTodoHeading,
+  IDeleteComment,
+  IDeletePanel,
+  IDragDropTodos,
+  IEditComment,
+  IEditPanel,
+  IPanel_InitialState,
+  IParams,
+} from "./panel.model";
 
 export const fetchPanels = createAsyncThunk(
   "panels/fetchById",
@@ -253,7 +186,7 @@ export const deleteComment = createAsyncThunk(
   }
 );
 
-const initialState: InitialState = {
+const initialState: IPanel_InitialState = {
   panels: [],
 };
 
@@ -283,7 +216,7 @@ const panelSlice = createSlice({
       .addCase(editPanel.rejected, (state, action) => {})
       .addCase(editPanel.fulfilled, (state, action) => {
         const { panel_name, panel_id } = action.payload;
-        state.panels.map((p, i) => {
+        state.panels?.map((p, i) => {
           if (p._id === panel_id) {
             p.name = panel_name;
           }
@@ -302,8 +235,7 @@ const panelSlice = createSlice({
       .addCase(addTodo.rejected, (state, action) => {})
       .addCase(addTodo.fulfilled, (state, action) => {
         const { addedTodo, _id } = action.payload;
-        console.log(_id);
-        state.panels.map((p, i) => {
+        state.panels?.map((p, i) => {
           if (_id === p._id) {
             p.todos.push(addedTodo);
           }
@@ -340,8 +272,8 @@ const panelSlice = createSlice({
       .addCase(changeTodoHeading.rejected, (state, action) => {})
       .addCase(changeTodoHeading.fulfilled, (state, action) => {
         const { heading, todo_id, history } = action.payload;
-        state.panels.map((panel) => {
-          panel.todos.map((todo) => {
+        state.panels?.map((panel) => {
+          panel.todos?.map((todo) => {
             if (todo._id === todo_id) {
               if (history) {
                 todo.heading = heading;
@@ -360,8 +292,8 @@ const panelSlice = createSlice({
       .addCase(changeDescription.rejected, (state, action) => {})
       .addCase(changeDescription.fulfilled, (state, action) => {
         const { description, todo_id, history } = action.payload;
-        state.panels.map((panel) => {
-          panel.todos.map((todo) => {
+        state.panels?.map((panel) => {
+          panel.todos?.map((todo) => {
             if (todo._id === todo_id) {
               if (history) {
                 todo.description = description;
@@ -380,9 +312,8 @@ const panelSlice = createSlice({
       .addCase(addComment.rejected, (state, action) => {})
       .addCase(addComment.fulfilled, (state, action) => {
         const { comment, todo_id } = action.payload;
-        console.log(comment, todo_id);
-        state.panels.map((panel) => {
-          panel.todos.map((todo) => {
+        state.panels?.map((panel) => {
+          panel.todos?.map((todo) => {
             if (todo._id === todo_id) {
               todo.comments.push(comment);
             }
@@ -396,10 +327,10 @@ const panelSlice = createSlice({
       .addCase(editComment.rejected, (state, action) => {})
       .addCase(editComment.fulfilled, (state, action) => {
         const { todo_id, newComment, comment_id } = action.payload;
-        state.panels.map((panel) => {
-          panel.todos.map((todo) => {
+        state.panels?.map((panel) => {
+          panel.todos?.map((todo) => {
             if (todo._id === todo_id) {
-              todo.comments.map((comment, index) => {
+              todo.comments?.map((comment, index) => {
                 if (comment._id === comment_id) {
                   comment.comment = newComment;
                 }
@@ -416,8 +347,8 @@ const panelSlice = createSlice({
       .addCase(deleteComment.rejected, (state, action) => {})
       .addCase(deleteComment.fulfilled, (state, action) => {
         const { todo_id, comment_id } = action.payload;
-        state.panels.map((panel) => {
-          panel.todos.map((todo) => {
+        state.panels?.map((panel) => {
+          panel.todos?.map((todo) => {
             if (todo._id === todo_id) {
               todo.comments = todo.comments.filter(
                 (comment) => comment._id !== comment_id

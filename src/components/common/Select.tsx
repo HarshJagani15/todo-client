@@ -1,15 +1,7 @@
 import React from "react";
+import { ISelectProps } from "./common.model";
 
-interface IProps {
-  name: string;
-  value?: string;
-  setValue?: (value: string) => void;
-  defaultOption?: string;
-  options: string[];
-  className?: string;
-}
-
-const Select: React.FC<IProps> = ({
+const Select: React.FC<ISelectProps> = ({
   name,
   value,
   setValue,
@@ -21,18 +13,17 @@ const Select: React.FC<IProps> = ({
     <select
       name={name}
       value={value}
-      id=""
       className={className ? className : "focus:outline-none"}
       onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
         setValue(e.target.value)
       }
     >
       {defaultOption ? (
-        <option value="" disabled hidden>
+        <option value="" disabled hidden selected>
           {defaultOption}
         </option>
       ) : null}
-      {options.map((value) => {
+      {options?.map((value) => {
         return <option value={value}>{value}</option>;
       })}
     </select>

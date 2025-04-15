@@ -1,26 +1,32 @@
 import { faUser, faEnvelope } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { Formik, Form } from "formik";
+import { Formik, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { getImagePath } from "../utils/get-Image";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { getImagePath } from "../utils/Image";
+import { useAppDispatch, useAppSelector } from "../store";
 import {
   editProfileName,
   editProfilePicture,
-} from "../store/slices/profile/profile-slice";
+} from "../slices/profile/profile-slice";
+import {
+  FILE_SIZE_MSG,
+  FILE_TYPE_MSG,
+  PROFILE_IMG_MESSAGE,
+  USERNAME_REQUIRED_MSG,
+} from "../utils/constants";
 
 const ProfileImage = Yup.object().shape({
   image: Yup.mixed()
-    .required("Image is required")
+    .required(PROFILE_IMG_MESSAGE)
     .test(
       "fileSize",
-      "File size is too large",
+      FILE_SIZE_MSG,
       (value: File | undefined) => value && value?.size <= 2000000
     ) // 2MB max
     .test(
       "fileType",
-      "Unsupported file format",
+      FILE_TYPE_MSG,
       (value: File | undefined) =>
         value && ["image/jpeg", "image/png"].includes(value?.type)
     ),
@@ -106,7 +112,7 @@ const Profile = () => {
                     validationSchema={ProfileImage}
                     onSubmit={addProfilePicture}
                   >
-                    {({ setFieldValue, errors, touched }) => (
+                    {({ setFieldValue }) => (
                       <Form className="h-full flex flex-col justify-between">
                         <div className="flex flex-col justify-center items-center gap-2">
                           <div className=" rounded-full h-24 w-24 bg-slate-400 border-[2px] border-white flex justify-center items-center ">
@@ -129,11 +135,6 @@ const Profile = () => {
                               />
                             )}
                           </div>
-                          {errors.image && touched.image && (
-                            <div className="text-black text-base text-wrap">
-                              {typeof errors.image === "string" && errors.image}
-                            </div>
-                          )}
                           <input
                             id="image"
                             name="image"
@@ -141,7 +142,7 @@ const Profile = () => {
                             onChange={(e) => {
                               handleFileChange(e, setFieldValue);
                             }}
-                            className="file-input-display"
+                            className="file-input-hidden"
                           />
                           <label
                             htmlFor="image"
@@ -149,8 +150,13 @@ const Profile = () => {
                           >
                             Upload Image
                           </label>
+                          <ErrorMessage
+                            name="image"
+                            component="div"
+                            className="text-red-600 text-base text-wrap"
+                          />
                         </div>
-                        <div className="flex gap-2 self-end">
+                        <div className="flex gap-2 self-center">
                           <button
                             className="bg-yellow-300 px-4"
                             onClick={() => {
@@ -198,7 +204,7 @@ const Profile = () => {
                     <span className="leading-none">{profile?.name}</span>
                   )}
                 </div>
-                <span className="pl-7">
+                <span className="pl-7 text-red-600">
                   {isUserNameEmpty.length ? isUserNameEmpty : null}
                 </span>
               </div>
@@ -215,7 +221,7 @@ const Profile = () => {
                 type="button"
                 onClick={() => {
                   if (!userName.length) {
-                    setIsUserNameEmpty("Required!");
+                    setIsUserNameEmpty(USERNAME_REQUIRED_MSG);
                   } else {
                     handleEditUserName();
                   }

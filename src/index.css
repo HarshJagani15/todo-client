@@ -3,14 +3,6 @@
 @tailwind utilities;
 
 
-.my-facebook-button-class {
-  @apply w-60 flex items-center justify-center bg-blue-600 text-white text-base py-[5px] px-4  shadow-md hover:bg-blue-700 transition duration-300;
-}
-
-.my-facebook-button-class  {
-  text-indent: -9999px; 
-}
-
-.file-input-display{
+.file-input-hidden{
   display: none;
 }

@@ -1,26 +1,25 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout";
-import Login from "../pages/login";
-import Register from "../pages/Register";
-import Panels from "../pages/Panels";
+import Login from "../pages/Auth/Login";
+import Register from "../pages/Auth/Register";
+import Panels from "../pages/Panels/index";
 import Profile from "../pages/Profile";
 import ProtectedRoute from "./ProtectedRoute";
+import { ROUTES } from "../utils/constants";
 
 const router = createBrowserRouter([
-  // Public Routes
   {
-    path: "/login",
+    path: ROUTES.LOGIN,
     element: <Login />,
   },
   {
-    path: "/register",
+    path: ROUTES.REGISTER,
     element: <Register />,
   },
 
-  // Protected Routes
   {
-    path: "/",
+    path: ROUTES.DASHBOARD,
     element: (
       <ProtectedRoute>
         <Layout />
@@ -32,7 +31,7 @@ const router = createBrowserRouter([
         element: <Panels />,
       },
       {
-        path: "/profile",
+        path: ROUTES.PROFILE,
         element: <Profile />,
       },
     ],

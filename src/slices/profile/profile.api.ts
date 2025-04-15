@@ -1,11 +1,11 @@
-import { axiosInstance } from "../../../utils/axios-config";
-import { IUpdateProfileName } from "./profile-slice";
+import { axiosInstance } from "../../utils/axios-config";
+import { IUpdateProfileName } from "./profile.model";
 
 export const getProfile = async () => {
   try {
     const response = await axiosInstance({
       method: "GET",
-      url: "/users/userProfile",
+      url: "/user/userProfile",
     });
     return response;
   } catch (error: unknown) {
@@ -14,11 +14,10 @@ export const getProfile = async () => {
 };
 
 export const updateProfilePicture = async (payload: FormData) => {
-  console.log(payload);
   try {
     const response = await axiosInstance({
       method: "POST",
-      url: "/users/userProfile/picture",
+      url: "/user/userProfile/picture",
       data: payload,
     });
     return response;
@@ -31,7 +30,7 @@ export const updateProfileName = async (payload: IUpdateProfileName) => {
   try {
     const response = await axiosInstance({
       method: "POST",
-      url: "/users/userProfile/name",
+      url: "/user/userProfile/name",
       data: payload,
     });
     return response;

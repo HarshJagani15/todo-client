@@ -1,4 +1,4 @@
-import { axiosInstance } from "../../../utils/axios-config";
+import { axiosInstance } from "../../utils/axios-config";
 import {
   IAddComment,
   IAddPanel,
@@ -11,14 +11,14 @@ import {
   IEditComment,
   IEditPanel,
   IParams,
-} from "../panel/panel.slice";
+} from "./panel.model";
 
 export const getAllPanels = async (payload: IParams) => {
   try {
     const response = await axiosInstance({
       method: "GET",
       url: "/panels",
-      data: payload,
+      params: payload,
     });
     return response;
   } catch (error: unknown) {
@@ -35,7 +35,6 @@ export const addNewPanel = async (payload: IAddPanel) => {
     });
     return response.data;
   } catch (error: unknown) {
-    console.log(error);
     throw error;
   }
 };

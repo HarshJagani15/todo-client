@@ -2,12 +2,11 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { signIn, signUp } from "./auth.api";
 import { toast } from "react-toastify";
-import { LoginFormValues } from "../../../pages/login";
-import { IRegisterFormData } from "../../../pages/Register";
+import { ILoginData, IRegisterData } from "./auth.model";
 
 export const signUpAsync = createAsyncThunk(
   "user/register",
-  async (payload: IRegisterFormData) => {
+  async (payload: IRegisterData) => {
     try {
       const response = await signUp(payload);
       return response;
@@ -21,7 +20,7 @@ export const signUpAsync = createAsyncThunk(
 
 export const signInAsync = createAsyncThunk(
   "user/login",
-  async (payload: LoginFormValues) => {
+  async (payload: ILoginData) => {
     try {
       const response = await signIn(payload);
       return response;
@@ -48,19 +47,13 @@ const authSlice = createSlice({
       .addCase(signUpAsync.pending, (state, action) => {})
       .addCase(signUpAsync.rejected, (state, action) => {})
       .addCase(signUpAsync.fulfilled, (state, action) => {
-        toast.success(action.payload.message, {
-          position: "top-right",
-          autoClose: 2000,
-        });
+        toast.success(action.payload.message);
       })
 
       .addCase(signInAsync.pending, (state, action) => {})
       .addCase(signInAsync.rejected, (state, action) => {})
       .addCase(signInAsync.fulfilled, (state, action) => {
-        toast.success(action.payload.message, {
-          position: "top-right",
-          autoClose: 2000,
-        });
+        toast.success(action.payload.message);
       });
   },
 });

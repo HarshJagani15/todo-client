@@ -1,5 +1,5 @@
 import axios from "axios";
-import { LOCALSTORAGE, ROUTE, ROUTING } from "./constants";
+import { LOCALSTORAGE, ROUTES, ROUTING } from "./constants";
 import { getUserSessionData, SessionData } from "./utils";
 
 export const axiosInstance = axios.create({
@@ -90,8 +90,7 @@ axiosInstance.interceptors.response.use(
 
           return axiosInstance(originalRequest);
         } catch (refreshError) {
-          console.error("Error refreshing token", refreshError);
-          window.location.href = ROUTE.LOGIN;
+          window.location.href = ROUTES.LOGIN;
           processQueue(refreshError, null);
           throw refreshError;
         } finally {

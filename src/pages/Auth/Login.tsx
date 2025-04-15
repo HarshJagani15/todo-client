@@ -1,12 +1,19 @@
 import React from "react";
-import { Formik, Field, Form } from "formik";
+import {
+  Formik,
+  Field,
+  Form,
+  ErrorMessage,
+  FormikErrors,
+  FormikValues,
+} from "formik";
 import * as Yup from "yup";
-import axios, { AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import {  toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import bg1 from "../images/project-management.png";
-import bg2 from "../images/bg_img.png";
+import bg1 from "../../images/bg_left_auth_page.png";
+import bg2 from "../../images/bg_right_auth_page.png";
 import FacebookLogin, {
   FailResponse,
   SuccessResponse,
@@ -14,10 +21,17 @@ import FacebookLogin, {
 import GitHubLogin from "react-github-login";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebook, faGithub } from "@fortawesome/free-brands-svg-icons";
-import { axiosInstance } from "../utils/axios-config";
-import { LOCALSTORAGE, ROUTE } from "../utils/constants";
-import { signInAsync } from "../store/slices/auth/auth.slice";
-import { useAppDispatch } from "../store/hooks";
+import {
+  Invalid_EMAIL_MSG,
+  LOCALSTORAGE,
+  LOGIN_FIELD_VALUES,
+  MESSAGE,
+  ROUTES,
+} from "../../utils/constants";
+import { signInAsync } from "../../slices/auth/auth.slice";
+import { useAppDispatch } from "../../store";
+import { facebook_signIn, github_signIn } from "../../slices/auth/auth.api";
+import { IGitHub_FailResponse, ILoginData } from "../../slices/auth/auth.model";
 
 const GITHUB_APP_ID = process.env.REACT_APP_GITHUB_APP_ID!;
 const GITHUB_CALLBACK_URL = process.env.REACT_APP_GITHUB_CALLBACK_URL!;
@@ -29,115 +43,90 @@ export enum LoginType {
   GITHUB = "github",
 }
 
-export interface LoginFormValues {
-  email: string;
-  password: string;
-}
+const initialValues = { email: "", password: "" };
 
-export interface GitHubFailResponse {
-  error: string;
-  error_description?: string;
-  error_uri?: string;
-  status?: number;
-}
-
-const LoginSchema: Yup.ObjectSchema<LoginFormValues> = Yup.object().shape({
-  email: Yup.string().email("Invalid email").required("Required"),
-  password: Yup.string().required("Required"),
+const validationSchema = Yup.object().shape({
+  email: Yup.string().email(Invalid_EMAIL_MSG).required(MESSAGE.FIELD_REQUIRED),
+  password: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
+  const isFieldDisabled = (
+    errors: FormikErrors<FormikValues>,
+    values: FormikValues,
+    fieldNames: string[],
+    index: number
+  ): boolean => {
+    for (let i = 0; i < index; i++) {
+      if (errors[fieldNames[i]] || !values[fieldNames[i]]) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleLogin = async (
-    values: LoginFormValues,
+    values: ILoginData,
     { setSubmitting }: { setSubmitting: (value: boolean) => void }
   ) => {
-    try {
-      const response = await dispatch(signInAsync(values));
+    const response = await dispatch(signInAsync(values));
 
-      if (response.payload.success) {
-        const token = response.payload.token;
-        const refreshToken = response.payload.refreshToken;
+    if (response.payload.success) {
+      const token = response.payload.token;
+      const refreshToken = response.payload.refreshToken;
 
-        localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
-        localStorage.setItem(LOCALSTORAGE.REFRESHTOKEN, refreshToken);
+      localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
+      localStorage.setItem(LOCALSTORAGE.REFRESHTOKEN, refreshToken);
 
-        setTimeout(() => navigate(ROUTE.DASHBOARD), 1000);
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Something went wrong", {
-          position: "top-right",
-          autoClose: 3000,
-        });
-      }
-    } finally {
-      setSubmitting(false);
+      navigate(ROUTES.DASHBOARD);
     }
+    setSubmitting(false);
   };
 
   const onSucessFacebook = async (res: SuccessResponse) => {
     if (res && res.accessToken) {
       try {
-        const response: AxiosResponse = await axiosInstance.post(
-          "/users/login/facebook",
-          {
-            accessToken: res.accessToken,
-            LoginType: LoginType.FACEBOOK,
-          }
+        const response: AxiosResponse = await facebook_signIn(
+          res.accessToken,
+          LoginType.FACEBOOK
         );
 
         if (response.data.success) {
           const token = response.data.token;
           if (token) {
             localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
-            navigate(ROUTE.DASHBOARD);
+            navigate(ROUTES.DASHBOARD);
           }
         }
       } catch (error) {
-        toast.error(error.response?.data?.message, {
-          position: "top-right",
-          autoClose: 3000,
-        });
+        toast.error(error.response?.data?.message);
       }
     }
   };
 
-  const onFailureFacebook = async (res: FailResponse) => {
-    toast.error(res.status, {
-      position: "top-right",
-      autoClose: 3000,
-    });
+  const onSocialMediaAuthenticationFailer = (
+    res: FailResponse | IGitHub_FailResponse
+  ) => {
+    toast.error(res.status);
   };
 
   const onSuccessGithub = async (res: { code: string }) => {
     try {
-      const response = await axiosInstance.post("/users/login/github", {
-        code: res.code,
-        LoginType: LoginType.GITHUB,
-      });
+      const response = await github_signIn(res.code, LoginType.GITHUB);
 
       if (response.data.success) {
         const token = response.data.token;
         if (token) {
           localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, token);
-          navigate(ROUTE.DASHBOARD);
+          navigate(ROUTES.DASHBOARD);
         }
       }
     } catch (error) {
-      toast.error(error.response?.data?.message, {
-        position: "top-right",
-        autoClose: 3000,
-      });
+      toast.error(error.response?.data?.message);
     }
-  };
-  const onFailureGithub = (response: GitHubFailResponse) => {
-    toast.error(response.status, {
-      position: "top-right",
-      autoClose: 3000,
-    });
   };
 
   return (
@@ -163,36 +152,42 @@ const Login: React.FC = () => {
           </span>
           <div className="flex flex-col gap-6">
             <Formik
-              initialValues={{ email: "", password: "" }}
-              validationSchema={LoginSchema}
+              initialValues={initialValues}
+              validationSchema={validationSchema}
               onSubmit={handleLogin}
             >
-              {({ errors, touched, isSubmitting }) => (
+              {({ isSubmitting, errors, values }) => (
                 <Form className="w-full flex gap-3 flex-col">
-                  <div>
-                    <label htmlFor="email">Email</label>
-                    <Field
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      className="focus:border-blue-600 focus:outline-none border-2 border-blue-600 rounded-[3px] px-2 py-[3px] w-full"
-                    />
-                    {errors.email && touched.email && (
-                      <div className="text-red-600">{errors.email}</div>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <label htmlFor="password">Password</label>
-                    <Field
-                      type="password"
-                      name="password"
-                      placeholder="Enter your password"
-                      className="focus:border-blue-600 focus:outline-none border-2 border-blue-600 rounded-[3px] px-2 py-[3px] w-full"
-                    />
-                    {errors.password && touched.password && (
-                      <div className="text-red-600">{errors.password}</div>
-                    )}
-                  </div>
+                  {LOGIN_FIELD_VALUES.map((name, index, fieldNames) => {
+                    const isDisabled = isFieldDisabled(
+                      errors,
+                      values,
+                      fieldNames,
+                      index
+                    );
+                    return (
+                      <div>
+                        <label htmlFor="email" className="capitalize">
+                          {name}
+                        </label>
+                        <Field
+                          type={name === "email" ? "email" : "password"}
+                          key={name}
+                          name={name}
+                          disabled={isDisabled}
+                          placeholder={`Enter your ${name}`}
+                          className={`${
+                            isDisabled ? "bg-gray-100" : null
+                          } focus:border-blue-600 focus:outline-none border-2 border-blue-600 rounded-[3px] px-2 py-[3px] w-full`}
+                        />
+                        <ErrorMessage
+                          name={name}
+                          component="div"
+                          className="text-red-600"
+                        />
+                      </div>
+                    );
+                  })}
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -216,7 +211,7 @@ const Login: React.FC = () => {
                   <FacebookLogin
                     appId="1035125208665501"
                     onSuccess={onSucessFacebook}
-                    onFail={onFailureFacebook}
+                    onFail={onSocialMediaAuthenticationFailer}
                     autoLoad={true}
                     children="Login with Facebook"
                     fields="name,email,picture"
@@ -232,7 +227,7 @@ const Login: React.FC = () => {
                     clientId={GITHUB_APP_ID}
                     redirectUri={GITHUB_CALLBACK_URL}
                     onSuccess={onSuccessGithub}
-                    onFailure={onFailureGithub}
+                    onFailure={onSocialMediaAuthenticationFailer}
                     buttonText="Login with Github"
                     className="pl-6 w-60 bg-gray-900 text-white text-center px-4 py-[5px] rounded-sm font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition duration-300"
                   />

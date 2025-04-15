@@ -1,9 +1,5 @@
 import React from "react";
-
-interface IDialogProps {
-  isOpen: boolean;
-  children: React.ReactNode;
-}
+import { IDialogProps } from "./common.model";
 
 const Dialog: React.FC<IDialogProps> = ({ isOpen, children }) => {
   if (!isOpen) return null;

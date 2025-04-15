@@ -1,7 +1,7 @@
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { PanelPage } from "./Panel";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store";
 import {
   addComment,
   addPanel,
@@ -11,17 +11,13 @@ import {
   dragDropTodos,
   editComment,
   fetchPanels,
-  IParams,
-  ITodos,
-} from "../store/slices/panel/panel.slice";
+} from "../../slices/panel/panel.slice";
+import { IParams, ITodos } from "../../slices/panel/panel.model";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsis, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
-import add_user from "../images/add_user.png";
-import star from "../images/star.png";
-import rainbow from "../images/rainbow.jpeg";
 import * as Yup from "yup";
-import Dialog from "../components/common/Dialog";
+import Dialog from "../../components/common/Dialog";
 import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   faShareNodes,
@@ -31,24 +27,24 @@ import {
   faBoltLightning,
 } from "@fortawesome/free-solid-svg-icons";
 import { faThumbsUp } from "@fortawesome/free-regular-svg-icons";
-import { Formik, Form, Field, FormikHelpers } from "formik";
+import { Formik, Form, Field, FormikHelpers, ErrorMessage } from "formik";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "react-router-dom";
-import Select from "../components/common/Select";
-import { defaultImage, profileDefultImage } from "../utils/get-Image";
+import Select from "../../components/common/Select";
+import { defaultImage } from "../../utils/Image";
+import star from "../../images/star.png";
+import { MESSAGE, OPTIONS } from "../../utils/constants";
 
 const HeadingSchema = Yup.object().shape({
-  heading: Yup.string().required("Required"),
+  heading: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
-const DescriptionSchema = Yup.object().shape({
-  description: Yup.string(),
-});
+
 const CommentSchema = Yup.object().shape({
-  comment: Yup.string().required("Required"),
+  comment: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
 
 const panelSchema = Yup.object().shape({
-  panelname: Yup.string().required("Required"),
+  panelname: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
 
 const formateDate = (date: string) => {
@@ -83,13 +79,7 @@ const Panels = () => {
   const [commentValue, setComment] = useState<string>("");
   const { panels } = useAppSelector((state) => state.panel);
   const [isPanelAdding, setIsPanelAdding] = useState<boolean>(false);
-  const men = defaultImage(profileDefultImage);
-  const images = [
-    { img: men, zindex: 4 },
-    { img: men, zindex: 3 },
-    { img: men, zindex: 2 },
-    { img: men, zindex: 1 },
-  ];
+  const men = defaultImage();
 
   const debouncedDispatch = useMemo(() => {
     return debounce((params: IParams) => {
@@ -202,7 +192,7 @@ const Panels = () => {
       if (!prev) return null;
       return {
         ...prev,
-        comments: prev.comments.map((c, i) =>
+        comments: prev?.comments?.map((c, i) =>
           c._id === commentEditIndex
             ? {
                 _id: commentId,
@@ -248,7 +238,7 @@ const Panels = () => {
 
   const Content = () => {
     return (
-      <div className="flex flex-col gap-10 w-[850px] bg-white p-10">
+      <div className="flex flex-col gap-10 w-[850px] bg-white p-10 overflow-y-scroll h-[600px]">
         <div className="flex justify-between">
           <div className="flex flex-col gap-2">
             <label htmlFor="title" className="text-lg font-semibold">
@@ -257,13 +247,13 @@ const Panels = () => {
 
             <Formik
               initialValues={{
-                heading: dialogBoxTodo?.heading!,
+                heading: dialogBoxHeading,
               }}
               validationSchema={HeadingSchema}
               onSubmit={handleTodoHeading}
             >
-              {({ errors, touched }) => (
-                <Form className="flex gap-8">
+              <Form className="flex gap-8">
+                <div className="flex flex-col">
                   <Field
                     type="text"
                     name="heading"
@@ -275,16 +265,14 @@ const Panels = () => {
                     }
                     className="focus:outline-none text-base py-1 w-64 bg-gray-100"
                   />
-                  {errors.heading && touched.heading && (
-                    <div>{errors.heading}</div>
-                  )}
-                  <Field
-                    type="submit"
-                    value="Save"
-                    className="bg-blue-700 text-white px-3 py-[1px] h-fit"
-                  />
-                </Form>
-              )}
+                  <ErrorMessage name="heading" component="div" />
+                </div>
+                <Field
+                  type="submit"
+                  value="Save"
+                  className="bg-blue-700 text-white px-3 py-[1px] h-fit"
+                />
+              </Form>
             </Formik>
           </div>
           <div className="border-red-600 border-2 w-fit self-start rounded-lg px-6 py-2 text-lg flex gap-4 text-center items-center ">
@@ -304,13 +292,12 @@ const Panels = () => {
               </label>
               <Formik
                 initialValues={{
-                  description: dialogBoxTodo?.description!,
+                  description: dialogBoxTodo?.description,
                 }}
-                validationSchema={DescriptionSchema}
                 onSubmit={handleDescription}
               >
-                {({ errors, touched }) => (
-                  <Form className="flex flex-col gap-4">
+                <Form className="flex flex-col gap-4">
+                  <div className="flex flex-col ">
                     <textarea
                       name="description"
                       rows={3}
@@ -322,24 +309,21 @@ const Panels = () => {
                       }
                       className="focus:outline-none text-base py-1 w-[345px] bg-gray-100 resize-none"
                     />
-                    {errors.description && touched.description && (
-                      <div>{errors.description}</div>
-                    )}
-                    <Field
-                      type="submit"
-                      value="Save"
-                      className="bg-blue-700 text-white px-4 py-[1px] h-fit w-fit self-end"
-                    />
-                  </Form>
-                )}
+                  </div>
+                  <Field
+                    type="submit"
+                    value="Save"
+                    className="bg-blue-700 text-white px-4 py-[1px] h-fit w-fit self-end"
+                  />
+                </Form>
               </Formik>
             </div>
             <div className="flex flex-col justify-between">
               <div className="flex flex-col gap-3">
                 <Select
-                  name={"dropdown"}
+                  name={"todo_dropdown"}
                   defaultOption={"To Do"}
-                  options={["To Do", "value 1"]}
+                  options={OPTIONS.DIALOG_TODO_DROPDOWN}
                   className={
                     "focus:outline-none bg-[#eeeeee] py-[5px] px-3 text-center font-semibold text-base w-fit text"
                   }
@@ -350,7 +334,7 @@ const Panels = () => {
                   <Select
                     name={"Actions"}
                     defaultOption={"Actions"}
-                    options={["value 1", "value 2"]}
+                    options={OPTIONS.DIALOG_ACTIONS}
                     className={
                       "focus:outline-none text-center  font-medium w-fit"
                     }
@@ -384,10 +368,10 @@ const Panels = () => {
                   <label htmlFor="">Show:</label>
 
                   <Select
-                    name={"dropdown"}
+                    name={"activity"}
                     value={dropdown}
                     setValue={setdropdown}
-                    options={["history", "comments"]}
+                    options={OPTIONS.DIALOG_ACTIVITY}
                     className={
                       "focus:outline-none text-center  font-medium w-fit"
                     }
@@ -416,7 +400,7 @@ const Panels = () => {
                       <li className="flex flex-col">
                         <div className="flex gap-2">
                           <img
-                            src={defaultImage(profileDefultImage)}
+                            src={defaultImage()}
                             alt="img"
                             className="size-8"
                           />
@@ -488,7 +472,7 @@ const Panels = () => {
                     );
                   })}
                 </ul>
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <img src={men} alt="img" className="size-8" />
                   <Formik
                     initialValues={{
@@ -497,8 +481,8 @@ const Panels = () => {
                     validationSchema={CommentSchema}
                     onSubmit={handleCommemt}
                   >
-                    {({ errors, touched }) => (
-                      <Form className="flex gap-2 items-center">
+                    <Form className="flex gap-2 items-start">
+                      <div className="flex flex-col">
                         <Field
                           type="text"
                           name="comment"
@@ -506,16 +490,14 @@ const Panels = () => {
                           placeholder="Add a comment..."
                           className="px-6 py-[1px] border-2 border-gray-400 text-base"
                         />
-                        {errors.comment && touched.comment && (
-                          <div>{errors.comment}</div>
-                        )}
-                        <Field
-                          type="submit"
-                          value={"Add"}
-                          className="bg-blue-700 text-white px-3 py-[1px] h-fit"
-                        />
-                      </Form>
-                    )}
+                        <ErrorMessage name="comment" component="div" />
+                      </div>
+                      <Field
+                        type="submit"
+                        value={"Add"}
+                        className="bg-blue-700 text-white px-3 py-[1px] h-fit"
+                      />
+                    </Form>
                   </Formik>
                 </div>
               </div>
@@ -532,7 +514,7 @@ const Panels = () => {
                   </thead>
 
                   <tbody className="text-gray-700 text-sm overflow-y-scroll">
-                    {dialogBoxTodo?.histories.map((history, index) => (
+                    {dialogBoxTodo?.histories?.map((history, index) => (
                       <tr
                         key={index}
                         className="border-b hover:bg-gray-50 transition h-auto"
@@ -624,7 +606,7 @@ const Panels = () => {
   };
 
   return (
-    <div className="p-10 flex flex-col gap-10">
+    <div className="p-10 flex flex-col gap-4">
       <div className="flex items-end justify-between">
         <div className="flex items-center gap-1">
           <img src={star} alt="img" className="h-8" />
@@ -651,48 +633,26 @@ const Panels = () => {
               className="absolute right-3 top-3 text-gray-600"
             />
           </div>
-          <div className=" px-8 border-r-2 border-gray-300 h-8 hidden">
-            {images?.map((img, index) => {
-              return (
-                <img
-                  src={img.img}
-                  alt="img"
-                  className="w-auto ml-[-5px]"
-                  style={{ zIndex: img.zindex }}
-                />
-              );
-            })}
-            <img src={add_user} alt="svg" className="w-8 ml-[-5px] z-0" />
-          </div>
-          <div className="px-8 border-r-2 border-gray-300  gap-1 hidden">
-            <img src={rainbow} alt="img" className="h-[22px]" />
-
-            <Select
-              name={"Experience"}
-              defaultOption={"Experience"}
-              options={["Option 1", "Option 2"]}
-            />
-          </div>
           <div className="px-8">
             <Select
-              name={"Label"}
+              name={"label"}
               defaultOption={"Label"}
-              options={["label 1", "label 2"]}
+              options={OPTIONS.LABEL}
             />
           </div>
         </div>
 
         <div className="flex gap-2 items-center">
-          <label className="text-sm">GROUP BY</label>
+          <label className="text-sm font-medium">GROUP BY :</label>
 
           <Select
-            name={"dropdown"}
+            name={"gropuBy"}
             defaultOption={"None"}
-            options={["value 1", "value 2"]}
+            options={OPTIONS.GROUPBY}
           />
         </div>
       </div>
-      <div className="relative flex flex-col w-full">
+      <div className="relative flex gap-6 flex-col w-full">
         <div className="self-end flex flex-col gap-2">
           <button
             type="button"
@@ -714,31 +674,29 @@ const Panels = () => {
                 onSubmit={handleAddPanel}
                 validationSchema={panelSchema}
               >
-                {({ errors, touched }) => (
-                  <Form>
-                    <div className=" shadow-md rounded-md flex gap-6 p-2">
-                      <div>
-                        <Field
-                          type="text"
-                          name="panelname"
-                          id="panelname"
-                          className="focus:outline-none bg-white border-[1px] border-black  w-full"
-                        />
-                        {errors.panelname && touched.panelname && (
-                          <div className="text-black text-base">
-                            {errors.panelname}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        type="submit"
-                        className="bg-blue-800 text-white px-4 h-[27px]"
-                      >
-                        Add
-                      </button>
+                <Form>
+                  <div className=" shadow-md rounded-md flex gap-6 p-2">
+                    <div>
+                      <Field
+                        type="text"
+                        name="panelname"
+                        id="panelname"
+                        className="focus:outline-none bg-white border-[1px] border-black  w-full"
+                      />
+                      <ErrorMessage
+                        name="panelname"
+                        component="div"
+                        className="text-black text-base"
+                      />
                     </div>
-                  </Form>
-                )}
+                    <button
+                      type="submit"
+                      className="bg-blue-800 text-white px-4 h-[27px]"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </Form>
               </Formik>
             ) : null}
           </div>

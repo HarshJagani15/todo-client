@@ -6,7 +6,7 @@ import React from "react";
 const App = () => {
   return (
     <React.Fragment>
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer autoClose={3000} />
       <RouterProvider router={router} />
     </React.Fragment>
   );

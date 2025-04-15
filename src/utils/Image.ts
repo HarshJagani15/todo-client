@@ -1,6 +1,6 @@
-export const defaultImage = (imagePath: string) => `../images/${imagePath}`;
+import default_Image from "../images/default_image.png";
 
-export const profileDefultImage = "default_image.png";
+export const defaultImage = () => default_Image;
 
 export const getImagePath = (img: string) => {
   if (!img?.startsWith("https://")) {
@@ -8,7 +8,7 @@ export const getImagePath = (img: string) => {
     if (img) {
       return `${baseURL}${img}`;
     } else {
-      return defaultImage(profileDefultImage);
+      return defaultImage();
     }
   }
   return img;

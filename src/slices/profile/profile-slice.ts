@@ -3,21 +3,10 @@ import {
   getProfile,
   updateProfileName,
   updateProfilePicture,
-} from "../profile/profile.api";
+} from "./profile.api";
 import axios from "axios";
 import { toast } from "react-toastify";
-
-export interface IInitialState {
-  profile: IProfile;
-}
-
-export interface IProfile {
-  name: string;
-  email?: string;
-  profileImage?: string;
-}
-
-export interface IUpdateProfileName extends IProfile {}
+import { IProfile_InitialState, IUpdateProfileName } from "./profile.model";
 
 export const fetchProfile = createAsyncThunk(
   "profile/fetchProfile",
@@ -61,7 +50,7 @@ export const editProfileName = createAsyncThunk(
   }
 );
 
-const initialState: IInitialState = {
+const initialState: IProfile_InitialState = {
   profile: { name: "", email: "", profileImage: "" },
 };
 
