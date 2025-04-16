@@ -14,13 +14,12 @@ import "react-toastify/dist/ReactToastify.css";
 import bg1 from "../../images/bg_left_auth_page.png";
 import bg2 from "../../images/bg_right_auth_page.png";
 import FacebookLogin, {
-  FailResponse,
   SuccessResponse,
 } from "@greatsumini/react-facebook-login";
 import GitHubLogin from "react-github-login";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebook, faGithub } from "@fortawesome/free-brands-svg-icons";
-import { LoginType } from "./Login";
+import { onSocialMediaAuthenticationFailure } from "./Login";
 import {
   Invalid_EMAIL_MSG,
   LOCALSTORAGE,
@@ -34,15 +33,24 @@ import { useAppDispatch } from "../../store";
 import { signUpAsync } from "../../slices/auth/auth.slice";
 import { facebook_signUp, github_signUp } from "../../slices/auth/auth.api";
 import {
-  IGitHub_FailResponse,
+  IFacebookSignupData,
   IRegisterData,
-  IRegisterFormData,
+  ISignupData,
+  LoginType,
 } from "../../slices/auth/auth.model";
 
-const GITHUB_APP_ID = process.env.REACT_APP_GITHUB_APP_ID!;
-const GITHUB_CALLBACK_URL = process.env.REACT_APP_GITHUB_CALLBACK_URL!;
+export const GITHUB_APP_ID = process.env.REACT_APP_GITHUB_APP_ID!;
+export const FACEBOOK_APP_ID = process.env.REACT_APP_FACEBOOK_APP_ID!;
+export const GITHUB_CALLBACK_URL = process.env.REACT_APP_GITHUB_CALLBACK_URL!;
 
-const SignupSchema = Yup.object().shape({
+const initialSignupValues = {
+  userName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+};
+
+const validationSignupSchema = Yup.object().shape({
   userName: Yup.string()
     .min(2, PASSWORD_MSG.TOSHORT)
     .max(50, PASSWORD_MSG.TOLONG)
@@ -84,14 +92,14 @@ const Register = () => {
   };
 
   const handleSubmit = async (values: IRegisterData) => {
-    const payload: IRegisterFormData = {
+    const registerFormData: ISignupData = {
       userName: values.userName,
       email: values.email,
       password: values.password,
       loginType: LoginType.EMAIL,
     };
 
-    const response = await dispatch(signUpAsync(payload));
+    const response = await dispatch(signUpAsync(registerFormData));
 
     if (response.payload.success) {
       navigate(ROUTES.LOGIN);
@@ -100,11 +108,12 @@ const Register = () => {
 
   const onSucessFacebook = async (res: SuccessResponse) => {
     if (res && res.accessToken) {
+      const facebookSignupData: IFacebookSignupData = {
+        accessToken: res.accessToken,
+        loginType: LoginType.FACEBOOK,
+      };
       try {
-        const response = await facebook_signUp(
-          res.accessToken,
-          LoginType.FACEBOOK
-        );
+        const response = await facebook_signUp(facebookSignupData);
 
         if (response.data.success) {
           const token = response.data.token;
@@ -119,13 +128,13 @@ const Register = () => {
     }
   };
 
-  const onFailureFacebook = async (res: FailResponse) => {
-    toast.error(res.status);
-  };
-
   const onSuccessGithub = async (res: { code: string }) => {
     try {
-      const response = await github_signUp(res.code, LoginType.GITHUB);
+      const githubSignupData = {
+        code: res.code,
+        loginType: LoginType.GITHUB,
+      };
+      const response = await github_signUp(githubSignupData);
 
       if (response.data.success) {
         const token = response.data.token;
@@ -137,9 +146,6 @@ const Register = () => {
     } catch (error) {
       toast.error(error.response?.data?.message);
     }
-  };
-  const onFailureGithub = (res: IGitHub_FailResponse) => {
-    toast.error(res.status);
   };
 
   return (
@@ -166,13 +172,8 @@ const Register = () => {
             </span>
           </div>
           <Formik
-            initialValues={{
-              userName: "",
-              email: "",
-              password: "",
-              confirmPassword: "",
-            }}
-            validationSchema={SignupSchema}
+            initialValues={initialSignupValues}
+            validationSchema={validationSignupSchema}
             onSubmit={handleSubmit}
           >
             {({ errors, values }) => (
@@ -276,9 +277,9 @@ const Register = () => {
                   className="absolute top-[7px] left-8 size-5 text-white"
                 />
                 <FacebookLogin
-                  appId="1035125208665501"
+                  appId={FACEBOOK_APP_ID}
                   onSuccess={onSucessFacebook}
-                  onFail={onFailureFacebook}
+                  onFail={onSocialMediaAuthenticationFailure}
                   autoLoad={true}
                   children="Sign up with Facebook"
                   fields="name,email,picture"
@@ -295,7 +296,7 @@ const Register = () => {
                   clientId={GITHUB_APP_ID}
                   redirectUri={GITHUB_CALLBACK_URL}
                   onSuccess={onSuccessGithub}
-                  onFailure={onFailureGithub}
+                  onFailure={onSocialMediaAuthenticationFailure}
                   className="pl-9 w-60 bg-gray-900 text-white text-center px-4 py-[5px] rounded-sm font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition duration-300"
                 />
               </div>

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Formik, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { getImagePath } from "../utils/Image";
+import { getImagePath } from "../utils/image";
 import { useAppDispatch, useAppSelector } from "../store";
 import {
   editProfileName,
@@ -16,14 +16,18 @@ import {
   USERNAME_REQUIRED_MSG,
 } from "../utils/constants";
 
-const ProfileImage = Yup.object().shape({
+const initialProfileValue = {
+  image: null,
+};
+
+const validationProfileImageSchema = Yup.object().shape({
   image: Yup.mixed()
     .required(PROFILE_IMG_MESSAGE)
     .test(
       "fileSize",
       FILE_SIZE_MSG,
       (value: File | undefined) => value && value?.size <= 2000000
-    ) // 2MB max
+    )
     .test(
       "fileType",
       FILE_TYPE_MSG,
@@ -106,10 +110,8 @@ const Profile = () => {
               >
                 <div className="absolute top-16 w-60 h-60 bg-white flex flex-col items-center justify-between p-4">
                   <Formik
-                    initialValues={{
-                      image: null,
-                    }}
-                    validationSchema={ProfileImage}
+                    initialValues={initialProfileValue}
+                    validationSchema={validationProfileImageSchema}
                     onSubmit={addProfilePicture}
                   >
                     {({ setFieldValue }) => (

@@ -1,4 +1,4 @@
-import { axiosInstance } from "../../utils/axios-config";
+import { axiosInstance } from "../../utils/axios.config";
 import { IUpdateProfileName } from "./profile.model";
 
 export const getProfile = async () => {

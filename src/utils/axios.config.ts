@@ -1,6 +1,6 @@
 import axios from "axios";
 import { LOCALSTORAGE, ROUTES, ROUTING } from "./constants";
-import { getUserSessionData, SessionData } from "./utils";
+import { getUserSessionData, ISessionData } from "./user.sessiondata";
 
 export const axiosInstance = axios.create({
   baseURL: process.env.REACT_APP_API_BASE_URL!,
@@ -15,7 +15,7 @@ axiosInstance.interceptors.request.use(
     );
 
     if (!isNoAuthRoute) {
-      const sessionData: SessionData = getUserSessionData();
+      const sessionData: ISessionData = getUserSessionData();
       const { accessToken } = sessionData;
       if (accessToken) {
         config.headers["Authorization"] = `Bearer ${accessToken}`;

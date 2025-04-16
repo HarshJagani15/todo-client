@@ -15,7 +15,6 @@ import "react-toastify/dist/ReactToastify.css";
 import bg1 from "../../images/bg_left_auth_page.png";
 import bg2 from "../../images/bg_right_auth_page.png";
 import FacebookLogin, {
-  FailResponse,
   SuccessResponse,
 } from "@greatsumini/react-facebook-login";
 import GitHubLogin from "react-github-login";
@@ -31,21 +30,29 @@ import {
 import { signInAsync } from "../../slices/auth/auth.slice";
 import { useAppDispatch } from "../../store";
 import { facebook_signIn, github_signIn } from "../../slices/auth/auth.api";
-import { IGitHub_FailResponse, ILoginData } from "../../slices/auth/auth.model";
+import {
+  IFacebookSigninData,
+  IGithubSigninData,
+  ISigninData,
+  LoginType,
+} from "../../slices/auth/auth.model";
+import {
+  FACEBOOK_APP_ID,
+  GITHUB_APP_ID,
+  GITHUB_CALLBACK_URL,
+} from "./Register";
 
-const GITHUB_APP_ID = process.env.REACT_APP_GITHUB_APP_ID!;
-const GITHUB_CALLBACK_URL = process.env.REACT_APP_GITHUB_CALLBACK_URL!;
+export const onSocialMediaAuthenticationFailure = (res: any) => {
+  if (res.status) {
+    toast.error(res.status);
+  } else {
+    toast.error(res.message);
+  }
+};
 
-export enum LoginType {
-  FACEBOOK = "facebook",
-  GOOGLE = "google",
-  EMAIL = "email",
-  GITHUB = "github",
-}
+const initialSigninValues = { email: "", password: "" };
 
-const initialValues = { email: "", password: "" };
-
-const validationSchema = Yup.object().shape({
+const validationSigninSchema = Yup.object().shape({
   email: Yup.string().email(Invalid_EMAIL_MSG).required(MESSAGE.FIELD_REQUIRED),
   password: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
@@ -69,7 +76,7 @@ const Login: React.FC = () => {
   };
 
   const handleLogin = async (
-    values: ILoginData,
+    values: ISigninData,
     { setSubmitting }: { setSubmitting: (value: boolean) => void }
   ) => {
     const response = await dispatch(signInAsync(values));
@@ -88,10 +95,13 @@ const Login: React.FC = () => {
 
   const onSucessFacebook = async (res: SuccessResponse) => {
     if (res && res.accessToken) {
+      const facebookSigninData: IFacebookSigninData = {
+        accessToken: res.accessToken,
+        loginType: LoginType.FACEBOOK,
+      };
       try {
         const response: AxiosResponse = await facebook_signIn(
-          res.accessToken,
-          LoginType.FACEBOOK
+          facebookSigninData
         );
 
         if (response.data.success) {
@@ -107,15 +117,13 @@ const Login: React.FC = () => {
     }
   };
 
-  const onSocialMediaAuthenticationFailer = (
-    res: FailResponse | IGitHub_FailResponse
-  ) => {
-    toast.error(res.status);
-  };
-
   const onSuccessGithub = async (res: { code: string }) => {
     try {
-      const response = await github_signIn(res.code, LoginType.GITHUB);
+      const githubSigninData: IGithubSigninData = {
+        code: res.code,
+        loginType: LoginType.GITHUB,
+      };
+      const response = await github_signIn(githubSigninData);
 
       if (response.data.success) {
         const token = response.data.token;
@@ -152,8 +160,8 @@ const Login: React.FC = () => {
           </span>
           <div className="flex flex-col gap-6">
             <Formik
-              initialValues={initialValues}
-              validationSchema={validationSchema}
+              initialValues={initialSigninValues}
+              validationSchema={validationSigninSchema}
               onSubmit={handleLogin}
             >
               {({ isSubmitting, errors, values }) => (
@@ -209,9 +217,9 @@ const Login: React.FC = () => {
                     className="absolute top-[7px] left-8 size-5 text-white"
                   />
                   <FacebookLogin
-                    appId="1035125208665501"
+                    appId={FACEBOOK_APP_ID}
                     onSuccess={onSucessFacebook}
-                    onFail={onSocialMediaAuthenticationFailer}
+                    onFail={onSocialMediaAuthenticationFailure}
                     autoLoad={true}
                     children="Login with Facebook"
                     fields="name,email,picture"
@@ -227,7 +235,7 @@ const Login: React.FC = () => {
                     clientId={GITHUB_APP_ID}
                     redirectUri={GITHUB_CALLBACK_URL}
                     onSuccess={onSuccessGithub}
-                    onFailure={onSocialMediaAuthenticationFailer}
+                    onFailure={onSocialMediaAuthenticationFailure}
                     buttonText="Login with Github"
                     className="pl-6 w-60 bg-gray-900 text-white text-center px-4 py-[5px] rounded-sm font-semibold flex items-center justify-center gap-2 hover:bg-gray-800 transition duration-300"
                   />

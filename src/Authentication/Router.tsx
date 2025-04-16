@@ -3,9 +3,9 @@ import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout";
 import Login from "../pages/Auth/Login";
 import Register from "../pages/Auth/Register";
-import Panels from "../pages/Panels/index";
+import Panels from "../pages/Panels/Index";
 import Profile from "../pages/Profile";
-import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from "./auth.guard";
 import { ROUTES } from "../utils/constants";
 
 const router = createBrowserRouter([

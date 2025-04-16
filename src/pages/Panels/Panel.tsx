@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useDrop } from "react-dnd";
-import { Todo } from "./Todos/index";
+import { Todo } from "./Todos/Index";
 import {
   addTodo,
   deletePanel,
@@ -14,11 +14,11 @@ import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useAppDispatch } from "../../store";
 import { MESSAGE } from "../../utils/constants";
 
-const todoInitalValue = {
+const initialTodoValue = {
   heading: "",
 };
 
-const panleIntialValue = (panelname: string) => ({ panelname });
+const initialPanelValue = (panelname: string) => ({ panelname });
 
 const validationTodoSchema: Yup.ObjectSchema<{ heading: string }> =
   Yup.object().shape({
@@ -100,7 +100,7 @@ export const PanelPage: React.FC<IPanelProps> = ({
           {isTodoAdding ? (
             <div className=" pb-6">
               <Formik
-                initialValues={todoInitalValue}
+                initialValues={initialTodoValue}
                 onSubmit={handleAddTodos}
                 validationSchema={validationTodoSchema}
               >
@@ -142,7 +142,7 @@ export const PanelPage: React.FC<IPanelProps> = ({
         <div className="flex flex-col">
           {isPanelEditing ? (
             <Formik
-              initialValues={panleIntialValue(panel.name)}
+              initialValues={initialPanelValue(panel.name)}
               onSubmit={handlePanelEdit}
               validationSchema={validationPanelNameSchema}
             >

@@ -2,13 +2,13 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { signIn, signUp } from "./auth.api";
 import { toast } from "react-toastify";
-import { ILoginData, IRegisterData } from "./auth.model";
+import { ISigninData, ISignupData } from "./auth.model";
 
 export const signUpAsync = createAsyncThunk(
   "user/register",
-  async (payload: IRegisterData) => {
+  async (signupData: ISignupData) => {
     try {
-      const response = await signUp(payload);
+      const response = await signUp(signupData);
       return response;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -20,9 +20,9 @@ export const signUpAsync = createAsyncThunk(
 
 export const signInAsync = createAsyncThunk(
   "user/login",
-  async (payload: ILoginData) => {
+  async (signinData: ISigninData) => {
     try {
-      const response = await signIn(payload);
+      const response = await signIn(signinData);
       return response;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {

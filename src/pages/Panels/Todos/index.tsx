@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { useDrag } from "react-dnd";
-import { defaultImage } from "../../../utils/Image";
+import { defaultImage } from "../../../utils/image";
 import { ITodoProps } from "../../../slices/panel/panel.model";
 
 export const Todo: React.FC<ITodoProps> = ({

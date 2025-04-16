@@ -1,5 +1,5 @@
 import { RouterProvider } from "react-router-dom";
-import router from "./Authentication/Router";
+import router from "./authentication/router";
 import { ToastContainer } from "react-toastify";
 import React from "react";
 

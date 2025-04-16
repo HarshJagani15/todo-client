@@ -1,4 +1,4 @@
-import { axiosInstance } from "../../utils/axios-config";
+import { axiosInstance } from "../../utils/axios.config";
 import {
   IAddComment,
   IAddPanel,

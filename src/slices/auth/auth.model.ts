@@ -1,13 +1,6 @@
-export interface ILoginData {
+export interface ISigninData {
   email: string;
   password: string;
-}
-
-export interface IGitHub_FailResponse {
-  error: string;
-  error_description?: string;
-  error_uri?: string;
-  status?: number;
 }
 
 export interface IRegisterData {
@@ -17,6 +10,33 @@ export interface IRegisterData {
   confirmPassword?: string;
 }
 
-export interface IRegisterFormData extends IRegisterData {
+export interface ISignupData extends IRegisterData {
   loginType: string;
+}
+
+export interface IFacebookSignupData {
+  accessToken: string;
+  loginType: string;
+}
+
+export interface IFacebookSigninData {
+  accessToken: string;
+  loginType: string;
+}
+
+export interface IGithubSigninData {
+  code: string;
+  loginType: string;
+}
+
+export interface IGithubSignupData {
+  code: string;
+  loginType: string;
+}
+
+export enum LoginType {
+  FACEBOOK = "facebook",
+  GOOGLE = "google",
+  EMAIL = "email",
+  GITHUB = "github",
 }

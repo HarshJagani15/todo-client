@@ -31,19 +31,31 @@ import { Formik, Form, Field, FormikHelpers, ErrorMessage } from "formik";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "react-router-dom";
 import Select from "../../components/common/Select";
-import { defaultImage } from "../../utils/Image";
+import { defaultImage } from "../../utils/image";
 import star from "../../images/star.png";
 import { MESSAGE, OPTIONS } from "../../utils/constants";
 
-const HeadingSchema = Yup.object().shape({
+const initialHeadingValue = (dialogBoxHeading: string) => ({
+  heading: dialogBoxHeading,
+});
+
+const initialCommentValue = {
+  comment: "",
+};
+
+const initialPanelValue = {
+  panelname: "",
+};
+
+const validationHeadingSchema = Yup.object().shape({
   heading: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
 
-const CommentSchema = Yup.object().shape({
+const validationCommentSchema = Yup.object().shape({
   comment: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
 
-const panelSchema = Yup.object().shape({
+const validationPanelSchema = Yup.object().shape({
   panelname: Yup.string().required(MESSAGE.FIELD_REQUIRED),
 });
 
@@ -172,7 +184,7 @@ const Panels = () => {
               date: result.comment.date,
               comment: result.comment.comment,
             },
-          ], // Use MongoDB `_id`
+          ],
         };
       });
       helpers.resetForm();
@@ -246,10 +258,8 @@ const Panels = () => {
             </label>
 
             <Formik
-              initialValues={{
-                heading: dialogBoxHeading,
-              }}
-              validationSchema={HeadingSchema}
+              initialValues={initialHeadingValue(dialogBoxHeading)}
+              validationSchema={validationHeadingSchema}
               onSubmit={handleTodoHeading}
             >
               <Form className="flex gap-8">
@@ -475,10 +485,8 @@ const Panels = () => {
                 <div className="flex items-start gap-3">
                   <img src={men} alt="img" className="size-8" />
                   <Formik
-                    initialValues={{
-                      comment: "",
-                    }}
-                    validationSchema={CommentSchema}
+                    initialValues={initialCommentValue}
+                    validationSchema={validationCommentSchema}
                     onSubmit={handleCommemt}
                   >
                     <Form className="flex gap-2 items-start">
@@ -668,11 +676,9 @@ const Panels = () => {
           <div>
             {isPanelAdding ? (
               <Formik
-                initialValues={{
-                  panelname: "",
-                }}
+                initialValues={initialPanelValue}
                 onSubmit={handleAddPanel}
-                validationSchema={panelSchema}
+                validationSchema={validationPanelSchema}
               >
                 <Form>
                   <div className=" shadow-md rounded-md flex gap-6 p-2">

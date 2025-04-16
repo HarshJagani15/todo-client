@@ -1,4 +1,4 @@
-export interface SessionData {
+export interface ISessionData {
   accessToken: string | undefined;
 }
 

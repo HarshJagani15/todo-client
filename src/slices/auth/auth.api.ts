@@ -1,12 +1,20 @@
-import { axiosInstance } from "../../utils/axios-config";
-import { ILoginData, IRegisterData } from "./auth.model";
+import { toast } from "react-toastify";
+import { axiosInstance } from "../../utils/axios.config";
+import {
+  IFacebookSigninData,
+  IFacebookSignupData,
+  IGithubSigninData,
+  IGithubSignupData,
+  ISigninData,
+  ISignupData,
+} from "./auth.model";
 
-export const signUp = async (payload: IRegisterData) => {
+export const signUp = async (signupData: ISignupData) => {
   try {
     const response = await axiosInstance({
       method: "POST",
       url: "/auth/signup",
-      data: payload,
+      data: signupData,
     });
     return response.data;
   } catch (error: unknown) {
@@ -14,12 +22,12 @@ export const signUp = async (payload: IRegisterData) => {
   }
 };
 
-export const signIn = async (payload: ILoginData) => {
+export const signIn = async (signinData: ISigninData) => {
   try {
     const response = await axiosInstance({
       method: "POST",
       url: "/auth/signin",
-      data: payload,
+      data: signinData,
     });
     return response.data;
   } catch (error: unknown) {
@@ -27,55 +35,66 @@ export const signIn = async (payload: ILoginData) => {
   }
 };
 
-export const github_signIn = async (code: string, LoginType: string) => {
+export const github_signIn = async (githubSigninData: IGithubSigninData) => {
   try {
-    const response = await axiosInstance.post("/auth/signup/github", {
-      code: code,
-      LoginType: LoginType,
-    });
-    return response;
+    const response = await axiosInstance.post(
+      "/auth/signin/github",
+      githubSigninData
+    );
+    if (response.data.success) {
+      toast.success(response.data.message);
+      return response;
+    }
   } catch (error: unknown) {
     throw error;
   }
 };
 
-export const github_signUp = async (code: string, LoginType: string) => {
+export const github_signUp = async (githubSignupData: IGithubSignupData) => {
+  console.log(githubSignupData.code);
   try {
-    const response = await axiosInstance.post("/auth/signup/github", {
-      code: code,
-      LoginType: LoginType,
-    });
-    return response;
+    const response = await axiosInstance.post(
+      "/auth/signup/github",
+      githubSignupData
+    );
+    if (response.data.success) {
+      toast.success(response.data.message);
+      return response;
+    }
   } catch (error: unknown) {
     throw error;
   }
 };
 
 export const facebook_signIn = async (
-  accessToken: string,
-  LoginType: string
+  facebookSigninData: IFacebookSigninData
 ) => {
   try {
-    const response = await axiosInstance.post("/auth/signin/facebook", {
-      accessToken: accessToken,
-      LoginType: LoginType,
-    });
-    return response;
+    const response = await axiosInstance.post(
+      "/auth/signin/facebook",
+      facebookSigninData
+    );
+    if (response.data.success) {
+      toast.success(response.data.message);
+      return response;
+    }
   } catch (error: unknown) {
     throw error;
   }
 };
 
 export const facebook_signUp = async (
-  accessToken: string,
-  LoginType: string
+  facebookSignupData: IFacebookSignupData
 ) => {
   try {
-    const response = await axiosInstance.post("/auth/signin/facebook", {
-      accessToken: accessToken,
-      LoginType: LoginType,
-    });
-    return response;
+    const response = await axiosInstance.post(
+      "/auth/signup/facebook",
+      facebookSignupData
+    );
+    if (response.data.success) {
+      toast.success(response.data.message);
+      return response;
+    }
   } catch (error: unknown) {
     throw error;
   }

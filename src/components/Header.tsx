@@ -2,11 +2,11 @@ import { faBell } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getImagePath } from "../utils/Image";
 import { useAppDispatch, useAppSelector } from "../store";
 import { fetchProfile } from "../slices/profile/profile-slice";
 import { ROUTES } from "../utils/constants";
 import site_logo from "../images/site_log.png";
+import { getImagePath } from "../utils/image";
 
 const Header = () => {
   const navigate = useNavigate();
