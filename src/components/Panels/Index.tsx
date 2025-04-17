@@ -17,7 +17,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsis, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import * as Yup from "yup";
-import Dialog from "../../components/common/Dialog";
+import Dialog from "../common/Dialog";
 import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   faShareNodes,
@@ -30,7 +30,7 @@ import { faThumbsUp } from "@fortawesome/free-regular-svg-icons";
 import { Formik, Form, Field, FormikHelpers, ErrorMessage } from "formik";
 import debounce from "lodash/debounce";
 import { useSearchParams } from "react-router-dom";
-import Select from "../../components/common/Select";
+import Select from "../common/Select";
 import { defaultImage } from "../../utils/image";
 import star from "../../images/star.png";
 import { MESSAGE, OPTIONS } from "../../utils/constants";

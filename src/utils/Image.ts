@@ -1,4 +1,4 @@
-import default_Image from "../images/default_image.png";
+import default_Image from "../images/default-image.png";
 
 export const defaultImage = () => default_Image;
 

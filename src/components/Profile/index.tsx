@@ -3,18 +3,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { Formik, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { getImagePath } from "../utils/image";
-import { useAppDispatch, useAppSelector } from "../store";
+import { getImagePath } from "../../utils/image";
+import { useAppDispatch, useAppSelector } from "../../store";
 import {
   editProfileName,
   editProfilePicture,
-} from "../slices/profile/profile-slice";
+} from "../../slices/profile/profile.slice";
 import {
   FILE_SIZE_MSG,
   FILE_TYPE_MSG,
   PROFILE_IMG_MESSAGE,
   USERNAME_REQUIRED_MSG,
-} from "../utils/constants";
+} from "../../utils/constants";
 
 const initialProfileValue = {
   image: null,

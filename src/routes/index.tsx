@@ -1,11 +1,10 @@
-import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout";
-import Login from "../pages/Auth/Login";
-import Register from "../pages/Auth/Register";
-import Panels from "../pages/Panels/Index";
-import Profile from "../pages/Profile";
-import ProtectedRoute from "./auth.guard";
+import Login from "../components/Auth/Login";
+import Register from "../components/Auth/Register";
+import Panels from "../components/Panels/Index";
+import Profile from "../components/Profile";
+import ProtectedRoute from "../components/Auth/Guard";
 import { ROUTES } from "../utils/constants";
 
 const router = createBrowserRouter([

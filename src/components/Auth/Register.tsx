@@ -11,8 +11,8 @@ import {
 import * as Yup from "yup";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import bg1 from "../../images/bg_left_auth_page.png";
-import bg2 from "../../images/bg_right_auth_page.png";
+import bg1 from "../../images/auth-left-img.png";
+import bg2 from "../../images/auth-right-img.png";
 import FacebookLogin, {
   SuccessResponse,
 } from "@greatsumini/react-facebook-login";
@@ -70,7 +70,7 @@ const validationSignupSchema = Yup.object().shape({
     .oneOf([Yup.ref("password")], PASSWORD_MSG.MATCH),
 });
 
-const Register = () => {
+const Register: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState<boolean>(false);

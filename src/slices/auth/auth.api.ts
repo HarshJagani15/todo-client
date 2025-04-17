@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { axiosInstance } from "../../utils/axios.config";
+import { axiosInstance } from "../../config/axios-interceptor";
 import {
   IFacebookSigninData,
   IFacebookSignupData,

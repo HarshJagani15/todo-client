@@ -3,9 +3,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../store";
-import { fetchProfile } from "../slices/profile/profile-slice";
+import { fetchProfile } from "../slices/profile/profile.slice";
 import { ROUTES } from "../utils/constants";
-import site_logo from "../images/site_log.png";
+import site_logo from "../images/site-logo.png";
 import { getImagePath } from "../utils/image";
 
 const Header = () => {

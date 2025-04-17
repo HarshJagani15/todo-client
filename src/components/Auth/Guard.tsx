@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LOCALSTORAGE, ROUTES } from "../utils/constants";
+import { LOCALSTORAGE, ROUTES } from "../../utils/constants";
 
 type Props = {
   children: React.ReactNode;
