@@ -54,16 +54,21 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const errorCode = error.response?.data?.code;
+
+    if (
+      error.response?.status === 401 &&
+      errorCode === "AUTH_TOKEN_EXPIRED" &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       const sessionData = getUserSessionData();
       const { accessToken, refreshToken } = sessionData;
-
       if (!isRefreshing) {
         isRefreshing = true;
         try {
-          const response = await axiosInstance.post("/users/refresh-token", {
+          const response = await axiosInstance.post("/auth/refresh-token", {
             accessToken,
             refreshToken,
           });
@@ -83,10 +88,6 @@ axiosInstance.interceptors.response.use(
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
           processQueue(null, newAccessToken);
-
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
 
           return axiosInstance(originalRequest);
         } catch (refreshError) {
@@ -111,7 +112,6 @@ axiosInstance.interceptors.response.use(
             throw error;
           });
       }
-    } else if (error.response?.status === 404) {
     }
 
     return Promise.reject(error);

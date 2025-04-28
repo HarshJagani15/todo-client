@@ -150,7 +150,7 @@ const Login: React.FC = () => {
           alt="Background"
           className="absolute w-96 bottom-0 right-0"
         />
-        <div className="flex flex-col items-center w-72 justify-self-center self-center bg-white shadow-lg p-6">
+        <div className="flex flex-col items-center w-72 justify-self-center self-center bg-white shadow-lg p-6 relative">
           <span className="mb-5 font-medium text-lg">Log in to continue</span>
           <span className="flex self-start gap-2 mb-4">
             New User?{" "}
@@ -179,7 +179,7 @@ const Login: React.FC = () => {
                           {name}
                         </label>
                         <Field
-                          type={name === "email" ? "email" : "password"}
+                          type={name}
                           key={name}
                           name={name}
                           disabled={isDisabled}

@@ -7,7 +7,7 @@ import {
   IChangeTodoHeading,
   IDeleteComment,
   IDeletePanel,
-  IDragDropTodos,
+  IUpdateTodoStatus,
   IEditComment,
   IEditPanel,
   IParams,
@@ -59,7 +59,7 @@ export const removePanel = async (payload: IDeletePanel) => {
       method: "DELETE",
       url: `/panels/${_id}`,
     });
-    return response.data;
+    return response.data.id;
   } catch (error: unknown) {
     throw error;
   }
@@ -78,11 +78,11 @@ export const addNewTodo = async (payload: IAddTodo) => {
   }
 };
 
-export const dragDropTodo = async (payload: IDragDropTodos) => {
+export const updateTodoStatus = async (payload: IUpdateTodoStatus) => {
   try {
     const response = await axiosInstance({
       method: "POST",
-      url: `/todos/dragdrop`,
+      url: `/todos/update-todo-status`,
       data: payload,
     });
     return response;
@@ -149,7 +149,7 @@ export const deleteExistingComment = async (payload: IDeleteComment) => {
   try {
     const response = await axiosInstance({
       method: "DELETE",
-      url: `/todos/comment?todo_id=${payload.todo_id}&comment_id=${payload._id}`,
+      url: `/todos/comment?todo_id=${payload.todo_id}&comment_id=${payload.comment_id}`,
     });
     return response;
   } catch (error: unknown) {

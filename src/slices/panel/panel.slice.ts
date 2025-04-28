@@ -4,7 +4,7 @@ import {
   addNewPanel,
   addNewTodo,
   deleteExistingComment,
-  dragDropTodo,
+  updateTodoStatus,
   getAllPanels,
   removePanel,
   updateComment,
@@ -22,14 +22,14 @@ import {
   IChangeTodoHeading,
   IDeleteComment,
   IDeletePanel,
-  IDragDropTodos,
+  IUpdateTodoStatus,
   IEditComment,
   IEditPanel,
   IPanel_InitialState,
   IParams,
 } from "./panel.model";
 
-export const fetchPanels = createAsyncThunk(
+export const fetchPanelsAsync = createAsyncThunk(
   "panels/fetchById",
   async (payload: IParams) => {
     try {
@@ -43,7 +43,7 @@ export const fetchPanels = createAsyncThunk(
   }
 );
 
-export const addPanel = createAsyncThunk(
+export const addPanelAsync = createAsyncThunk(
   "panels/addPanel",
   async (payload: IAddPanel) => {
     try {
@@ -58,7 +58,7 @@ export const addPanel = createAsyncThunk(
   }
 );
 
-export const editPanel = createAsyncThunk(
+export const editPanelAsync = createAsyncThunk(
   "panels/editPanel",
   async (payload: IEditPanel) => {
     try {
@@ -73,7 +73,7 @@ export const editPanel = createAsyncThunk(
   }
 );
 
-export const deletePanel = createAsyncThunk(
+export const deletePanelAsync = createAsyncThunk(
   "panels/deletePanel",
   async (payload: IDeletePanel) => {
     try {
@@ -88,7 +88,7 @@ export const deletePanel = createAsyncThunk(
   }
 );
 
-export const addTodo = createAsyncThunk(
+export const addTodoAsync = createAsyncThunk(
   "panels/addTodo",
   async (payload: IAddTodo) => {
     try {
@@ -102,11 +102,11 @@ export const addTodo = createAsyncThunk(
   }
 );
 
-export const dragDropTodos = createAsyncThunk(
-  "panels/dragdropTodo",
-  async (payload: IDragDropTodos) => {
+export const updateTodoStatusAsync = createAsyncThunk(
+  "panels/update-todo-status",
+  async (payload: IUpdateTodoStatus) => {
     try {
-      const response = await dragDropTodo(payload);
+      const response = await updateTodoStatus(payload);
       return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -116,7 +116,7 @@ export const dragDropTodos = createAsyncThunk(
   }
 );
 
-export const changeTodoHeading = createAsyncThunk(
+export const changeTodoHeadingAsync = createAsyncThunk(
   "panels/changeHeading",
   async (payload: IChangeTodoHeading) => {
     try {
@@ -130,7 +130,7 @@ export const changeTodoHeading = createAsyncThunk(
   }
 );
 
-export const changeDescription = createAsyncThunk(
+export const changeDescriptionAsync = createAsyncThunk(
   "panels/changeDescription",
   async (payload: IChangeTodoDescription) => {
     try {
@@ -144,7 +144,7 @@ export const changeDescription = createAsyncThunk(
   }
 );
 
-export const addComment = createAsyncThunk(
+export const addCommentAsync = createAsyncThunk(
   "panels/addComment",
   async (payload: IAddComment) => {
     try {
@@ -158,7 +158,7 @@ export const addComment = createAsyncThunk(
   }
 );
 
-export const editComment = createAsyncThunk(
+export const editCommentAsync = createAsyncThunk(
   "panels/editComment",
   async (payload: IEditComment) => {
     try {
@@ -172,7 +172,7 @@ export const editComment = createAsyncThunk(
   }
 );
 
-export const deleteComment = createAsyncThunk(
+export const deleteCommentAsync = createAsyncThunk(
   "panels/deleteComment",
   async (payload: IDeleteComment) => {
     try {
@@ -200,52 +200,52 @@ const panelSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPanels.pending, (state, action) => {})
-      .addCase(fetchPanels.rejected, (state, action) => {})
-      .addCase(fetchPanels.fulfilled, (state, action) => {
+      .addCase(fetchPanelsAsync.pending, (state, action) => {})
+      .addCase(fetchPanelsAsync.rejected, (state, action) => {})
+      .addCase(fetchPanelsAsync.fulfilled, (state, action) => {
         state.panels = action.payload;
       })
 
-      .addCase(addPanel.pending, (state, action) => {})
-      .addCase(addPanel.rejected, (state, action) => {})
-      .addCase(addPanel.fulfilled, (state, action) => {
+      .addCase(addPanelAsync.pending, (state, action) => {})
+      .addCase(addPanelAsync.rejected, (state, action) => {})
+      .addCase(addPanelAsync.fulfilled, (state, action) => {
         state.panels.push({ ...action.payload });
       })
 
-      .addCase(editPanel.pending, (state, action) => {})
-      .addCase(editPanel.rejected, (state, action) => {})
-      .addCase(editPanel.fulfilled, (state, action) => {
+      .addCase(editPanelAsync.pending, (state, action) => {})
+      .addCase(editPanelAsync.rejected, (state, action) => {})
+      .addCase(editPanelAsync.fulfilled, (state, action) => {
         const { panel_name, panel_id } = action.payload;
-        state.panels?.map((p, i) => {
-          if (p._id === panel_id) {
-            p.name = panel_name;
+        state.panels?.map((panel) => {
+          if (panel._id === panel_id) {
+            panel.name = panel_name;
           }
-          return p;
+          return panel;
         });
       })
 
-      .addCase(deletePanel.pending, (state, action) => {})
-      .addCase(deletePanel.rejected, (state, action) => {})
-      .addCase(deletePanel.fulfilled, (state, action) => {
+      .addCase(deletePanelAsync.pending, (state, action) => {})
+      .addCase(deletePanelAsync.rejected, (state, action) => {})
+      .addCase(deletePanelAsync.fulfilled, (state, action) => {
         const panel_id = action.payload;
-        state.panels = state.panels.filter((p, i) => p._id !== panel_id);
+        state.panels = state.panels.filter((panel) => panel._id !== panel_id);
       })
 
-      .addCase(addTodo.pending, (state, action) => {})
-      .addCase(addTodo.rejected, (state, action) => {})
-      .addCase(addTodo.fulfilled, (state, action) => {
+      .addCase(addTodoAsync.pending, (state, action) => {})
+      .addCase(addTodoAsync.rejected, (state, action) => {})
+      .addCase(addTodoAsync.fulfilled, (state, action) => {
         const { addedTodo, _id } = action.payload;
-        state.panels?.map((p, i) => {
-          if (_id === p._id) {
-            p.todos.push(addedTodo);
+        state.panels?.map((panel) => {
+          if (_id === panel._id) {
+            panel.todos.push(addedTodo);
           }
-          return p;
+          return panel;
         });
       })
 
-      .addCase(dragDropTodos.pending, (state, action) => {})
-      .addCase(dragDropTodos.rejected, (state, action) => {})
-      .addCase(dragDropTodos.fulfilled, (state, action) => {
+      .addCase(updateTodoStatusAsync.pending, (state, action) => {})
+      .addCase(updateTodoStatusAsync.rejected, (state, action) => {})
+      .addCase(updateTodoStatusAsync.fulfilled, (state, action) => {
         const { todoId, sourcePanelId, targetPanelId } = action.payload;
 
         const sourcePanel = state.panels.find(
@@ -268,19 +268,15 @@ const panelSlice = createSlice({
         targetPanel.todos.push(todoToMove);
       })
 
-      .addCase(changeTodoHeading.pending, (state, action) => {})
-      .addCase(changeTodoHeading.rejected, (state, action) => {})
-      .addCase(changeTodoHeading.fulfilled, (state, action) => {
+      .addCase(changeTodoHeadingAsync.pending, (state, action) => {})
+      .addCase(changeTodoHeadingAsync.rejected, (state, action) => {})
+      .addCase(changeTodoHeadingAsync.fulfilled, (state, action) => {
         const { heading, todo_id, history } = action.payload;
         state.panels?.map((panel) => {
           panel.todos?.map((todo) => {
-            if (todo._id === todo_id) {
-              if (history) {
-                todo.heading = heading;
-                todo.histories = history;
-              } else {
-                todo.heading = heading;
-              }
+            if (todo._id === todo_id && history) {
+              todo.heading = heading;
+              todo.histories.push(history);
             }
             return todo;
           });
@@ -288,19 +284,15 @@ const panelSlice = createSlice({
         });
       })
 
-      .addCase(changeDescription.pending, (state, action) => {})
-      .addCase(changeDescription.rejected, (state, action) => {})
-      .addCase(changeDescription.fulfilled, (state, action) => {
+      .addCase(changeDescriptionAsync.pending, (state, action) => {})
+      .addCase(changeDescriptionAsync.rejected, (state, action) => {})
+      .addCase(changeDescriptionAsync.fulfilled, (state, action) => {
         const { description, todo_id, history } = action.payload;
         state.panels?.map((panel) => {
           panel.todos?.map((todo) => {
-            if (todo._id === todo_id) {
-              if (history) {
-                todo.description = description;
-                todo.histories = history;
-              } else {
-                todo.description = description;
-              }
+            if (todo._id === todo_id && history) {
+              todo.description = description;
+              todo.histories = history;
             }
             return todo;
           });
@@ -308,9 +300,9 @@ const panelSlice = createSlice({
         });
       })
 
-      .addCase(addComment.pending, (state, action) => {})
-      .addCase(addComment.rejected, (state, action) => {})
-      .addCase(addComment.fulfilled, (state, action) => {
+      .addCase(addCommentAsync.pending, (state, action) => {})
+      .addCase(addCommentAsync.rejected, (state, action) => {})
+      .addCase(addCommentAsync.fulfilled, (state, action) => {
         const { comment, todo_id } = action.payload;
         state.panels?.map((panel) => {
           panel.todos?.map((todo) => {
@@ -323,16 +315,16 @@ const panelSlice = createSlice({
         });
       })
 
-      .addCase(editComment.pending, (state, action) => {})
-      .addCase(editComment.rejected, (state, action) => {})
-      .addCase(editComment.fulfilled, (state, action) => {
-        const { todo_id, newComment, comment_id } = action.payload;
+      .addCase(editCommentAsync.pending, (state, action) => {})
+      .addCase(editCommentAsync.rejected, (state, action) => {})
+      .addCase(editCommentAsync.fulfilled, (state, action) => {
+        const { todoId, newUpdatedComment, commentId } = action.payload;
         state.panels?.map((panel) => {
           panel.todos?.map((todo) => {
-            if (todo._id === todo_id) {
-              todo.comments?.map((comment, index) => {
-                if (comment._id === comment_id) {
-                  comment.comment = newComment;
+            if (todo._id === todoId) {
+              todo.comments?.map((comment) => {
+                if (comment._id === commentId) {
+                  comment.comment = newUpdatedComment;
                 }
                 return comment;
               });
@@ -343,15 +335,15 @@ const panelSlice = createSlice({
         });
       })
 
-      .addCase(deleteComment.pending, (state, action) => {})
-      .addCase(deleteComment.rejected, (state, action) => {})
-      .addCase(deleteComment.fulfilled, (state, action) => {
-        const { todo_id, comment_id } = action.payload;
+      .addCase(deleteCommentAsync.pending, (state, action) => {})
+      .addCase(deleteCommentAsync.rejected, (state, action) => {})
+      .addCase(deleteCommentAsync.fulfilled, (state, action) => {
+        const { todoId, commentId } = action.payload;
         state.panels?.map((panel) => {
           panel.todos?.map((todo) => {
-            if (todo._id === todo_id) {
+            if (todo._id === todoId) {
               todo.comments = todo.comments.filter(
-                (comment) => comment._id !== comment_id
+                (comment) => comment._id !== commentId
               );
             }
             return todo;

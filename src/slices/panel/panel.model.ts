@@ -42,7 +42,7 @@ export interface IAddComment extends ITodos {
   comment: string;
 }
 
-export interface IDragDropTodos {
+export interface IUpdateTodoStatus {
   todoId: string;
   sourcePanelId: string;
   targetPanelId: string;
@@ -58,8 +58,9 @@ export interface IEditComment extends Comment {
   comment: string;
 }
 
-export interface IDeleteComment extends Comment {
+export interface IDeleteComment {
   todo_id: string;
+  comment_id: string;
 }
 
 export interface History {

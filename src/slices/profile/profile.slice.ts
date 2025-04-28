@@ -8,7 +8,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { IProfile_InitialState, IUpdateProfileName } from "./profile.model";
 
-export const fetchProfile = createAsyncThunk(
+export const fetchProfileAsync = createAsyncThunk(
   "profile/fetchProfile",
   async () => {
     try {
@@ -22,7 +22,7 @@ export const fetchProfile = createAsyncThunk(
   }
 );
 
-export const editProfilePicture = createAsyncThunk(
+export const editProfilePictureAsync = createAsyncThunk(
   "profile/editProfilePicture",
   async (payload: FormData) => {
     try {
@@ -36,7 +36,7 @@ export const editProfilePicture = createAsyncThunk(
   }
 );
 
-export const editProfileName = createAsyncThunk(
+export const editProfileNameAsync = createAsyncThunk(
   "profile/editProfileName",
   async (payload: IUpdateProfileName) => {
     try {
@@ -64,21 +64,21 @@ const profileSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProfile.pending, (state, action) => {})
-      .addCase(fetchProfile.rejected, (state, action) => {})
-      .addCase(fetchProfile.fulfilled, (state, action) => {
+      .addCase(fetchProfileAsync.pending, (state, action) => {})
+      .addCase(fetchProfileAsync.rejected, (state, action) => {})
+      .addCase(fetchProfileAsync.fulfilled, (state, action) => {
         state.profile = action.payload;
       })
 
-      .addCase(editProfilePicture.pending, (state, action) => {})
-      .addCase(editProfilePicture.rejected, (state, action) => {})
-      .addCase(editProfilePicture.fulfilled, (state, action) => {
+      .addCase(editProfilePictureAsync.pending, (state, action) => {})
+      .addCase(editProfilePictureAsync.rejected, (state, action) => {})
+      .addCase(editProfilePictureAsync.fulfilled, (state, action) => {
         state.profile = { ...state.profile, profileImage: action.payload };
       })
 
-      .addCase(editProfileName.pending, (state, action) => {})
-      .addCase(editProfileName.rejected, (state, action) => {})
-      .addCase(editProfileName.fulfilled, (state, action) => {
+      .addCase(editProfileNameAsync.pending, (state, action) => {})
+      .addCase(editProfileNameAsync.rejected, (state, action) => {})
+      .addCase(editProfileNameAsync.fulfilled, (state, action) => {
         state.profile = { ...state.profile, name: action.payload };
       });
   },

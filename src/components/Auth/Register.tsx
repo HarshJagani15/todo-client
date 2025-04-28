@@ -118,7 +118,6 @@ const Register: React.FC = () => {
         if (response.data.success) {
           const token = response.data.token;
           if (token) {
-            localStorage.setItem(LOCALSTORAGE.AUTHTOKEN, response.data.token);
             navigate(ROUTES.DASHBOARD);
           }
         }
@@ -150,7 +149,7 @@ const Register: React.FC = () => {
 
   return (
     <React.Fragment>
-      <div className="bg-gray-50 pt-4">
+      <div className="bg-gray-50 pt-4 z-0">
         <img
           src={bg1}
           alt="Backround img"
@@ -161,7 +160,7 @@ const Register: React.FC = () => {
           alt="BAckground img"
           className="absolute w-96 bottom-0 right-0"
         />
-        <div className="flex flex-col gap-6  justify-self-center w-fit rounded-[10px] bg-white p-10 ">
+        <div className="flex flex-col gap-6  justify-self-center w-fit rounded-[10px] bg-white p-10 relative ">
           <div className="flex flex-col gap-2">
             <h1 className="text-[28px] font-[500] text-black ">Register</h1>
             <span>

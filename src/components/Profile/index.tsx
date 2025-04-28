@@ -6,8 +6,8 @@ import * as Yup from "yup";
 import { getImagePath } from "../../utils/image";
 import { useAppDispatch, useAppSelector } from "../../store";
 import {
-  editProfileName,
-  editProfilePicture,
+  editProfileNameAsync,
+  editProfilePictureAsync,
 } from "../../slices/profile/profile.slice";
 import {
   FILE_SIZE_MSG,
@@ -57,7 +57,7 @@ const Profile = () => {
   );
 
   const handleEditUserName = async () => {
-    dispatch(editProfileName({ name: userName }));
+    dispatch(editProfileNameAsync({ name: userName }));
     setIsUserNameEditing(false);
     setIsUserNameEmpty("");
   };
@@ -84,7 +84,7 @@ const Profile = () => {
   const addProfilePicture = async (values: { image: File }) => {
     const formData = new FormData();
     formData.append("image", values.image);
-    dispatch(editProfilePicture(formData));
+    dispatch(editProfilePictureAsync(formData));
 
     setOpenDialog(false);
   };

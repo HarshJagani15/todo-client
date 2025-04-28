@@ -2,9 +2,9 @@ import React, { useRef, useState } from "react";
 import { useDrop } from "react-dnd";
 import { Todo } from "./Todos/Index";
 import {
-  addTodo,
-  deletePanel,
-  editPanel,
+  addTodoAsync,
+  deletePanelAsync,
+  editPanelAsync,
 } from "../../slices/panel/panel.slice";
 import { IPanelProps } from "../../slices/panel/panel.model";
 import { Field, Formik, Form, FormikHelpers, ErrorMessage } from "formik";
@@ -47,12 +47,12 @@ export const PanelPage: React.FC<IPanelProps> = ({
   const [isPanelDeleting, setIsPanelDeleting] = useState<boolean>(false);
 
   const handlePanelDelete = (panelID: string) => {
-    dispatch(deletePanel({ _id: panelID }));
+    dispatch(deletePanelAsync({ _id: panelID }));
   };
 
   const handlePanelEdit = (values: { panelname: string }) => {
     dispatch(
-      editPanel({
+      editPanelAsync({
         _id: panel._id,
         name: values.panelname,
       })
@@ -64,7 +64,7 @@ export const PanelPage: React.FC<IPanelProps> = ({
     values: { heading: string },
     formikHelpers: FormikHelpers<{ heading: string }>
   ) => {
-    dispatch(addTodo({ heading: values.heading, _id: panel._id }));
+    dispatch(addTodoAsync({ heading: values.heading, _id: panel._id }));
     setIsTodoAdding(false);
     formikHelpers.setSubmitting(false);
   };

@@ -45,12 +45,12 @@ export const FILE_TYPE_MSG = "Unsupported file format";
 export const Invalid_EMAIL_MSG = "Invalid email";
 
 export const PASSWORD_MSG = {
-  TOSHORT: "Too Short!",
-  TOLONG: "Too Long!",
+  TOSHORT: "Too short!",
+  TOLONG: "Too long!",
   UPPERCASE: "Password must start with an uppercase letter",
   LOWERCASE: "Password must contain at least one lowercase letter",
   SPECIAL_CHARACTER: "Password must contain at least one special character",
   MATCH: "Passwords must match",
 };
 
-export const USERNAME_REQUIRED_MSG = "Username is Required!";
+export const USERNAME_REQUIRED_MSG = "Username is required!";

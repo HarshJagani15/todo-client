@@ -3,14 +3,14 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { PanelPage } from "./Panel";
 import { useAppDispatch, useAppSelector } from "../../store";
 import {
-  addComment,
-  addPanel,
-  changeDescription,
-  changeTodoHeading,
-  deleteComment,
-  dragDropTodos,
-  editComment,
-  fetchPanels,
+  addCommentAsync,
+  addPanelAsync,
+  changeDescriptionAsync,
+  changeTodoHeadingAsync,
+  deleteCommentAsync,
+  updateTodoStatusAsync,
+  editCommentAsync,
+  fetchPanelsAsync,
 } from "../../slices/panel/panel.slice";
 import { IParams, ITodos } from "../../slices/panel/panel.model";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -34,10 +34,6 @@ import Select from "../common/Select";
 import { defaultImage } from "../../utils/image";
 import star from "../../images/star.png";
 import { MESSAGE, OPTIONS } from "../../utils/constants";
-
-const initialHeadingValue = (dialogBoxHeading: string) => ({
-  heading: dialogBoxHeading,
-});
 
 const initialCommentValue = {
   comment: "",
@@ -79,7 +75,6 @@ const Panels = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isDetailsVisible, setIsDetailVisible] = useState<boolean>(false);
   const [dialogBoxTodo, setDialogBoxTodo] = useState<null | ITodos>(null);
-  const [dialogBoxHeading, setDialogBoxHeading] = useState<string>("");
   const [dialogBoxDescription, setDialogBoxDescription] = useState<string>("");
   const [dropdown, setdropdown] = useState<string>("");
   const [searchValue, setSearchValue] = useState<string>("");
@@ -95,7 +90,7 @@ const Panels = () => {
 
   const debouncedDispatch = useMemo(() => {
     return debounce((params: IParams) => {
-      dispatch(fetchPanels(params));
+      dispatch(fetchPanelsAsync(params));
     }, 500);
   }, [dispatch]);
 
@@ -110,11 +105,6 @@ const Panels = () => {
     debouncedDispatch(params);
   }, [searchParams, debouncedDispatch]);
 
-  useEffect(() => {
-    setDialogBoxDescription(dialogBoxTodo?.description);
-    setDialogBoxHeading(dialogBoxTodo?.heading);
-  }, [isOpen, dialogBoxTodo?.description, dialogBoxTodo?.heading]);
-
   const handleSearchParams = (value: string) => {
     if (value) {
       setSearchParams({ search: value });
@@ -123,10 +113,13 @@ const Panels = () => {
     }
   };
 
-  const handleDescription = async () => {
+  const handleTodoHeading = async (
+    values: { heading: string },
+    helpers: FormikHelpers<{ heading: string }>
+  ) => {
     const result = await dispatch(
-      changeDescription({
-        description: dialogBoxDescription!,
+      changeTodoHeadingAsync({
+        heading: values.heading,
         _id: dialogBoxTodo?._id!,
       })
     ).unwrap();
@@ -140,12 +133,16 @@ const Panels = () => {
         };
       });
     }
+    helpers.setSubmitting(false);
   };
 
-  const handleTodoHeading = async () => {
+  const handleDescription = async (
+    values: { description: string },
+    helpers: FormikHelpers<{ description: string }>
+  ) => {
     const result = await dispatch(
-      changeTodoHeading({
-        heading: dialogBoxHeading!,
+      changeDescriptionAsync({
+        description: values.description,
         _id: dialogBoxTodo?._id!,
       })
     ).unwrap();
@@ -159,20 +156,21 @@ const Panels = () => {
         };
       });
     }
+    helpers.setSubmitting(false);
   };
 
   const handleCommemt = async (
     values: { comment: string },
     helpers: FormikHelpers<{ comment: string }>
   ) => {
-    const result = await dispatch(
-      addComment({
+    const response = await dispatch(
+      addCommentAsync({
         comment: values.comment!,
         _id: dialogBoxTodo?._id!,
       })
     ).unwrap();
 
-    if (result) {
+    if (response) {
       setDialogBoxTodo((prev) => {
         if (!prev) return null;
         return {
@@ -180,9 +178,9 @@ const Panels = () => {
           comments: [
             ...prev.comments,
             {
-              _id: result.comment._id,
-              date: result.comment.date,
-              comment: result.comment.comment,
+              _id: response.comment._id,
+              date: response.comment.date,
+              comment: response.comment.comment,
             },
           ],
         };
@@ -191,52 +189,55 @@ const Panels = () => {
     }
   };
 
-  const handleEditComment = (commentId: string) => {
-    dispatch(
-      editComment({
+  const handleEditComment = async (commentId: string) => {
+    const response = await dispatch(
+      editCommentAsync({
         todo_id: dialogBoxTodo?._id!,
         comment: commentValue,
         _id: commentId,
       })
-    );
+    ).unwrap();
 
     setDialogBoxTodo((prev) => {
       if (!prev) return null;
       return {
         ...prev,
-        comments: prev?.comments?.map((c, i) =>
-          c._id === commentEditIndex
+        comments: prev?.comments?.map((comment, index) =>
+          comment._id === response.commentId
             ? {
-                _id: commentId,
+                _id: response.commentId,
                 date: Date.now(),
-                comment: commentValue,
+                comment: response.newUpdatedComment,
               }
-            : c
+            : comment
         ),
       };
     });
   };
 
-  const handleDeleteComment = (commentId: string) => {
-    dispatch(
-      deleteComment({
+  const handleDeleteComment = async (commentId: string) => {
+    console.log(dialogBoxTodo?._id);
+    const response = await dispatch(
+      deleteCommentAsync({
         todo_id: dialogBoxTodo?._id!,
-        _id: commentId,
+        comment_id: commentId,
       })
-    );
+    ).unwrap();
 
     setDialogBoxTodo((prev) => {
       if (!prev) return null;
       return {
         ...prev,
-        comments: prev.comments.filter((c, i) => c._id !== commentId),
+        comments: prev.comments.filter(
+          (comment, index) => comment._id !== response.commentId
+        ),
       };
     });
   };
 
   const handleAddPanel = (values: { panelname: string }) => {
     const name = values.panelname;
-    dispatch(addPanel({ name }));
+    dispatch(addPanelAsync({ name }));
     setIsPanelAdding(false);
   };
 
@@ -245,7 +246,7 @@ const Panels = () => {
     sourcePanelId: string,
     targetPanelId: string
   ) => {
-    dispatch(dragDropTodos({ todoId, sourcePanelId, targetPanelId }));
+    dispatch(updateTodoStatusAsync({ todoId, sourcePanelId, targetPanelId }));
   };
 
   const Content = () => {
@@ -258,7 +259,9 @@ const Panels = () => {
             </label>
 
             <Formik
-              initialValues={initialHeadingValue(dialogBoxHeading)}
+              initialValues={{
+                heading: dialogBoxTodo?.heading,
+              }}
               validationSchema={validationHeadingSchema}
               onSubmit={handleTodoHeading}
             >
@@ -269,10 +272,6 @@ const Panels = () => {
                     name="heading"
                     id="heading"
                     placeholder="Add a heading..."
-                    value={dialogBoxHeading}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setDialogBoxHeading(e.target.value)
-                    }
                     className="focus:outline-none text-base py-1 w-64 bg-gray-100"
                   />
                   <ErrorMessage name="heading" component="div" />
@@ -290,7 +289,10 @@ const Panels = () => {
             <FontAwesomeIcon icon={faShareNodes}></FontAwesomeIcon>
             <FontAwesomeIcon
               icon={faXmark}
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setDialogBoxTodo(null);
+                setIsOpen(false);
+              }}
             ></FontAwesomeIcon>
           </div>
         </div>
@@ -308,15 +310,12 @@ const Panels = () => {
               >
                 <Form className="flex flex-col gap-4">
                   <div className="flex flex-col ">
-                    <textarea
+                    <Field
+                      as="textarea"
                       name="description"
                       rows={3}
                       id="description"
                       placeholder="Add a description..."
-                      value={dialogBoxDescription}
-                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                        setDialogBoxDescription(e.target.value)
-                      }
                       className="focus:outline-none text-base py-1 w-[345px] bg-gray-100 resize-none"
                     />
                   </div>
@@ -545,7 +544,7 @@ const Panels = () => {
                             <div className="flex gap-2">
                               <span className="flex">
                                 <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded-md line-through">
-                                  {history.previous.description}
+                                  {history.previous?.description}
                                 </span>
                                 <svg
                                   className="w-6 h-6 text-gray-800 dark:text-white"
@@ -566,7 +565,7 @@ const Panels = () => {
                                 </svg>
                               </span>
                               <span className="px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold rounded-md">
-                                {history.updated.description}
+                                {history.updated?.description}
                               </span>
                             </div>
                           ) : (
@@ -574,7 +573,7 @@ const Panels = () => {
                               <span>
                                 <span className="flex">
                                   <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-semibold rounded-md line-through">
-                                    {history.previous.heading}
+                                    {history.previous?.heading}
                                   </span>
                                   <svg
                                     className="w-6 h-6 text-gray-800 dark:text-white"
@@ -596,7 +595,7 @@ const Panels = () => {
                                 </span>
                               </span>
                               <span className="px-2 py-1 bg-green-100 text-green-600 text-xs font-semibold rounded-md">
-                                {history.updated.heading}
+                                {history.updated?.heading}
                               </span>
                             </div>
                           )}
