@@ -1,0 +1,76 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A modern and intuitive task management system that allows users to efficiently organize tasks across multiple panels based on their current status (e.g., To Do, In Progress, Completed). Users can seamlessly drag and drop tasks between panels to update their workflow in real-time.",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-brands-svg-icons": "^6.7.2",
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@greatsumini/react-facebook-login": "^3.4.0",
+    "@reduxjs/toolkit": "^2.6.1",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.126",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "axios": "^1.8.2",
+    "formik": "^2.4.6",
+    "immutability-helper": "^3.1.1",
+    "lodash": "^4.17.21",
+    "react": "^19.0.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "^19.0.0",
+    "react-facebook-login": "^4.1.1",
+    "react-github-login": "^1.0.3",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.3.0",
+    "react-scripts": "5.0.1",
+    "react-toastify": "^11.0.5",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4",
+    "yup": "^1.6.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.16",
+    "@types/react-facebook-login": "^4.1.11",
+    "@types/yup": "^0.29.14",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
